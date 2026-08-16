@@ -50,10 +50,12 @@ git push -u origin main
 ```
 
 ### 2. Cloudflare Pages 프로젝트 연결
-- Cloudflare 대시보드 → Workers & Pages → 프로젝트 만들기 → GitHub 저장소 연결
+- Cloudflare 대시보드 → Workers & Pages → **Create application → Pages 탭** → Connect to Git
+  - ⚠️ "Workers" 탭(Workers Builds)으로 연결하면 안 됩니다. 이 프로젝트는 `pages_build_output_dir` + `functions/`(Pages Functions) + D1 바인딩을 쓰는 Pages 프로젝트라서, Workers Builds가 기본 실행하는 `npx wrangler deploy`로는 배포가 실패합니다(`wrangler deploy`가 아니라 Pages 전용 업로드 파이프라인이 필요함).
 - 빌드 명령어: `npm install && npm run build`
 - 빌드 출력 디렉터리: `public`
 - Functions 디렉터리는 저장소 루트의 `functions/`를 자동 인식합니다
+- `wrangler.jsonc`의 `d1_databases` 설정을 빌드 시 자동으로 읽어 D1 바인딩을 구성합니다(아래 3번에서 실제 `database_id`로 교체해야 함) — 대시보드에서 별도로 D1 바인딩을 추가할 필요는 없습니다.
 
 ### 3. D1 데이터베이스 생성
 ```bash
