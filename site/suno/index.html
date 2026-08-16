@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suno 키워드 레퍼런스</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+::-webkit-scrollbar{height:4px;width:4px;background:#1c1c1c}
+::-webkit-scrollbar-thumb{background:#333;border-radius:4px}
+:root{
+  --bg:#111;--bg2:#181818;--bg3:#1a1a1a;--bg4:#202020;
+  --border:#242424;--border2:#2e2e2e;
+  --text:#e0d8cc;--text2:#bbb;--muted:#666;--muted2:#555;
+  --accent:#c8a97e;
+  --danger-bg:#1e1212;--danger-border:#3a1818;--danger-text:#d07777;
+  --info-bg:#101820;--info-border:#1a3040;--info-text:#88b8d0;
+  --panel-w:300px;
+}
+body{font-family:'DM Mono','Courier New',monospace;background:var(--bg);color:var(--text);min-height:100vh}
+#app{display:flex;min-height:100vh}
+#main{flex:1;min-width:0;padding-bottom:80px}
+#header{background:var(--bg2);border-bottom:1px solid var(--border);padding:18px 20px 0;position:sticky;top:0;z-index:100}
+#header-inner{max-width:900px;margin:0 auto}
+.header-meta{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
+.header-meta span:first-child{font-size:10px;letter-spacing:.28em;color:var(--muted);text-transform:uppercase}
+.header-meta span:last-child{font-size:10px;color:var(--accent);letter-spacing:.12em}
+h1{font-size:20px;font-weight:700;color:#f0e8dd;letter-spacing:-.02em;margin-bottom:14px}
+#search-input{width:100%;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;padding:8px 14px;color:var(--text);font-size:12px;outline:none;font-family:inherit;margin-bottom:14px;transition:border-color .15s}
+#search-input:focus{border-color:var(--accent)}
+#tab-bar{display:flex;flex-wrap:wrap;gap:2px;padding-bottom:4px}
+.tab-btn{background:transparent;color:var(--muted);border:none;border-radius:5px 5px 0 0;padding:6px 11px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:400;white-space:nowrap;transition:all .12s;flex-shrink:0}
+.tab-btn.active{color:#111;font-weight:700}
+.tab-btn:hover:not(.active){color:var(--text2)}
+#content{max-width:900px;margin:0 auto;padding:22px 20px 0}
+.tab-desc{font-size:12px;color:var(--muted);margin-bottom:20px}
+.group{margin-bottom:28px}
+.group-header{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.group-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;flex-shrink:0}
+.group-note{font-size:10px;color:var(--muted2);font-style:italic}
+.group-divider{flex:1;height:1px;background:#1e1e1e}
+.group-add-btn{background:none;border:none;color:#3a3a3a;cursor:pointer;font-size:16px;padding:0 2px;line-height:1;transition:color .12s;font-family:inherit}
+.group-add-btn:hover{color:#888}
+.tag-list{display:flex;flex-wrap:wrap;gap:6px}
+.tag-wrap{display:inline-flex;align-items:stretch;gap:0;border-radius:5px;overflow:hidden}
+.tag-main{display:flex;align-items:center;border-radius:5px 0 0 5px;border:1px solid #252525;border-right:none;background:var(--bg3);cursor:pointer;font-family:inherit;transition:all .12s;outline:none;padding:4px 10px}
+.tag-main:hover{border-color:#555}
+.tag-main.selected{outline:2px solid var(--accent);outline-offset:1px}
+.tag-main.danger{background:var(--danger-bg);border-color:var(--danger-border)}
+.tag-main.info{background:var(--info-bg);border-color:var(--info-border)}
+.tag-main.custom{border-style:dashed}
+.tag-en{font-size:12px;white-space:nowrap;color:var(--text2)}
+.tag-main.danger .tag-en{color:var(--danger-text)}
+.tag-main.info .tag-en{color:var(--info-text)}
+.tag-main.selected .tag-en{color:var(--accent)}
+.tag-ko{display:flex;align-items:center;padding:4px 8px;font-size:10px;color:#888;background:#161616;border:1px solid #2a2a2a;border-left:1px solid #222;border-radius:0 5px 5px 0;white-space:nowrap;cursor:default;user-select:none;transition:color .12s}
+.tag-main:hover+.tag-ko,.tag-main.selected+.tag-ko{color:#aaa}
+.tag-main.danger+.tag-ko{color:#a05555;border-color:var(--danger-border);background:#160e0e}
+.tag-main.info+.tag-ko{color:#6090a8;border-color:var(--info-border);background:#0c1420}
+.tag-delete-btn{background:none;border:none;color:#444;cursor:pointer;font-size:11px;padding:1px 4px;line-height:1;font-family:inherit;transition:color .1s;align-self:center;margin-left:2px}
+.tag-delete-btn:hover{color:var(--danger-text)}
+.search-badge{margin-left:6px;font-size:9px;opacity:.45}
+.search-count{font-size:11px;color:var(--muted2);margin-bottom:14px;letter-spacing:.12em}
+.no-results{color:var(--muted2);font-size:13px;padding:20px 0}
+.add-form{display:flex;gap:6px;margin-top:10px}
+.add-input{background:#1a1a1a;border:1px solid var(--border2);border-radius:5px;padding:5px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;width:200px}
+.add-submit{color:#111;border:none;border-radius:5px;padding:5px 12px;font-size:12px;cursor:pointer;font-weight:700;font-family:inherit}
+#builder{width:var(--panel-w);flex-shrink:0;background:#141414;border-left:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden}
+#builder-header{padding:16px 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+#builder-title{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:2px}
+#builder-sub{font-size:10px;color:var(--muted)}
+#builder-tags{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:6px}
+.builder-empty{font-size:11px;color:#333;text-align:center;margin-top:30px;line-height:1.8}
+.builder-chip{display:flex;align-items:center;background:#1c1c1c;border:1px solid #2a2a2a;border-radius:5px;padding:5px 8px 5px 10px;gap:6px;animation:chipIn .15s ease}
+@keyframes chipIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:translateX(0)}}
+.builder-chip .chip-en{font-size:11px;color:var(--text2);flex:1;word-break:break-all}
+.builder-chip .chip-ko{font-size:10px;color:#555;flex-shrink:0;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.builder-chip-remove{background:none;border:none;color:#3a3a3a;cursor:pointer;font-size:14px;line-height:1;padding:0 2px;flex-shrink:0;transition:color .1s;font-family:inherit}
+.builder-chip-remove:hover{color:var(--danger-text)}
+.builder-chip-drag{color:#2e2e2e;font-size:12px;cursor:grab;flex-shrink:0;user-select:none;padding:0 2px}
+.builder-chip.dragging{opacity:.4}
+#builder-footer{flex-shrink:0;border-top:1px solid var(--border);padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+#builder-preview{background:#0e0e0e;border:1px solid #232323;border-radius:5px;padding:8px 10px;font-size:11px;color:#555;min-height:52px;line-height:1.7;word-break:break-all;max-height:90px;overflow-y:auto}
+#builder-preview.has-content{color:var(--text2)}
+#builder-actions{display:flex;gap:6px}
+.btn-copy-all{flex:1;background:var(--accent);color:#111;border:none;border-radius:5px;padding:7px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .12s;letter-spacing:.04em}
+.btn-copy-all:hover{opacity:.85}
+.btn-copy-all:disabled{opacity:.3;cursor:not-allowed}
+.btn-clear{background:#1e1e1e;color:var(--muted);border:1px solid #2a2a2a;border-radius:5px;padding:7px 10px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .12s}
+.btn-clear:hover{color:var(--danger-text);border-color:var(--danger-border)}
+.btn-clear:disabled{opacity:.3;cursor:not-allowed}
+#sep-row{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted)}
+.sep-btn{background:#1e1e1e;border:1px solid #2a2a2a;color:var(--muted2);border-radius:4px;padding:2px 7px;font-size:10px;cursor:pointer;font-family:inherit;transition:all .12s}
+.sep-btn.active{background:#2a2a2a;color:var(--text2);border-color:#3a3a3a}
+#builder-count{font-size:10px;color:var(--muted);text-align:right;margin-top:-2px}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--accent);color:#111;padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:.04em;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap;z-index:999}
+#toast.show{opacity:1}
+.mode-toggle{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.mode-btn{flex:1 1 140px;background:var(--bg3);border:1px solid #2a2a2a;color:var(--text2);border-radius:6px;padding:8px 12px;font-size:12px;cursor:pointer;font-family:inherit;transition:all .12s;font-weight:500}
+.defaults-toggle{display:flex;align-items:center;gap:7px;margin-bottom:14px;font-size:12px;color:var(--text2);cursor:pointer;user-select:none}
+.defaults-toggle input{cursor:pointer}
+.mode-btn:hover{border-color:#555}
+.mode-btn.active{background:var(--accent);color:#111;border-color:var(--accent);font-weight:700}
+.fusion-info{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2);margin-bottom:16px;background:var(--bg3);border:1px solid #2a2a2a;border-radius:6px;padding:9px 12px}
+.fusion-reroll-btn{margin-left:auto;background:#1e1e1e;border:1px solid #2a2a2a;color:var(--accent);border-radius:5px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap}
+.fusion-reroll-btn:hover{border-color:var(--accent)}
+.genre-picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.genre-chip{background:var(--bg3);border:1px solid #2a2a2a;color:var(--text2);border-radius:20px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;transition:all .12s}
+.genre-chip:hover{border-color:#555}
+.genre-chip.active{color:#111;font-weight:700}
+#shuffle-btn{display:block;background:var(--accent);color:#111;border:none;border-radius:6px;padding:11px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.04em;transition:opacity .12s;margin-bottom:22px}
+#shuffle-btn:hover{opacity:.85}
+.combo-category{margin-bottom:18px}
+.combo-cat-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.combo-cat-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.combo-cat-btns{display:flex;gap:2px;margin-left:auto}
+.combo-icon-btn{background:none;border:none;color:#444;cursor:pointer;font-size:13px;padding:2px 5px;transition:color .12s;font-family:inherit;line-height:1}
+.combo-icon-btn:hover{color:var(--accent)}
+.combo-icon-btn.locked{color:var(--accent)}
+.combo-actions{display:flex;gap:8px;margin-top:20px;padding-top:18px;border-top:1px solid var(--border)}
+.btn-combo-add{flex:1;background:var(--accent);color:#111;border:none;border-radius:5px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.03em;transition:opacity .12s}
+.btn-combo-add:hover{opacity:.85}
+.btn-combo-copy{flex:1;background:#1e1e1e;color:var(--text2);border:1px solid #2a2a2a;border-radius:5px;padding:10px 14px;font-size:12px;cursor:pointer;font-family:inherit;transition:all .12s}
+.btn-combo-copy:hover{color:var(--accent);border-color:var(--accent)}
+.jjhl-backbar{background:#0c0c0c;border-bottom:1px solid #242424;padding:8px 20px;font-family:'DM Mono','Courier New',monospace}
+.jjhl-backbar a{color:var(--accent);text-decoration:none;font-size:11px;letter-spacing:.08em;font-weight:700}
+.jjhl-backbar a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="jjhl-backbar"><a href="../index.html">&#8592; JJHL 홈으로</a></div>
+<div id="app">
+  <div id="main">
+    <div id="header">
+      <div id="header-inner">
+        <div class="header-meta"><span>Suno Prompt</span><span>FULL REFERENCE v4.0</span></div>
+        <h1>키워드 레퍼런스</h1>
+        <input id="search-input" type="text" placeholder="키워드 검색 (영어 또는 한글)…" autocomplete="off">
+        <div id="tab-bar"></div>
+      </div>
+    </div>
+    <div id="content"></div>
+  </div>
+  <div id="builder">
+    <div id="builder-header">
+      <div id="builder-title">프롬프트 빌더</div>
+      <div id="builder-sub">태그 클릭 → 여기 추가</div>
+    </div>
+    <div id="builder-tags"></div>
+    <div id="builder-footer">
+      <div id="sep-row">
+        <span>구분자</span>
+        <button class="sep-btn active" onclick="setSep(', ')">쉼표</button>
+        <button class="sep-btn" onclick="setSep(' ')">공백</button>
+        <button class="sep-btn" onclick="setSep('\n')">줄바꿈</button>
+      </div>
+      <div id="builder-preview">태그를 클릭하면 여기에 프롬프트가 만들어져요</div>
+      <div id="builder-count"></div>
+      <div id="builder-actions">
+        <button class="btn-copy-all" id="btn-copy" onclick="copyAll()" disabled>전체 복사</button>
+        <button class="btn-clear" id="btn-clear" onclick="clearAll()" disabled>초기화</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const TABS = [{"id": "random", "label": "🎲 랜덤 조합", "color": "#e0b060", "desc": "장르를 고르고 랜덤 조합 버튼을 누르면 그 장르에 어울리는 키워드가 자동으로 섞여요. 마음에 드는 항목은 🔓를 눌러 🔒로 고정하고 나머지만 다시 섞어보세요.", "groups": []}, {"id": "basics", "label": "🎯 기본 규칙", "color": "#c8a97e", "desc": "프롬프트 작성 공식 & 기본값", "groups": [{"label": "프롬프트 순서 공식", "info": true, "note": "장르 → 에너지 → 악기 → 프로덕션 → 리버브 → 보컬", "tags": [["[장르]", "장르"], ["[에너지/템포]", "에너지/템포"], ["[악기 1~2개]", "악기"], ["[프로덕션 텍스처]", "프로덕션"], ["[리버브/공간]", "공간감"], ["[보컬 방향]", "보컬"]]}, {"label": "✅ 고정 기본값", "tags": [["studio recording", "스튜디오 녹음"], ["close mic", "근거리 마이크"], ["tight mix", "타이트한 믹스"], ["dry vocal", "건조한 보컬"], ["no reverb", "리버브 없음"], ["clean production", "클린 프로덕션"], ["no autotune", "오토튠 없음"], ["no heavy effects", "과한 이펙트 없음"]]}, {"label": "❌ 절대 사용 금지", "danger": true, "tags": [["concert hall", "콘서트홀"], ["live band", "라이브 밴드"], ["live performance", "라이브 공연"], ["stadium reverb", "스타디움 리버브"], ["arena sound", "아레나 사운드"], ["outdoor stage", "야외 무대"], ["live recording", "라이브 녹음"], ["crowd noise", "관중 소리"]]}, {"label": "⚠️ 피해야 할 것들", "danger": true, "tags": [["artist names", "아티스트 이름"], ["song titles", "곡 제목"], ["5+ genres at once", "5개 이상 장르"], ["contradictions", "상충되는 키워드"], ["narrative descriptions", "서사 묘사"]]}]}, {"id": "structure", "label": "🏗️ 구조 태그", "color": "#b0c4de", "desc": "곡 섹션 구조 — 가사 필드 안에 [ ] 로 사용", "groups": [{"label": "기본 섹션", "tags": [["[Intro]", "인트로"], ["[Verse]", "절"], ["[Verse 1]", "1절"], ["[Verse 2]", "2절"], ["[Pre-Chorus]", "프리코러스"], ["[Chorus]", "후렴"], ["[Post-Chorus]", "포스트 코러스"], ["[Hook]", "훅"], ["[Bridge]", "브릿지"], ["[Outro]", "아웃트로"]]}, {"label": "다이나믹 섹션", "tags": [["[Break]", "브레이크"], ["[Drop]", "드롭"], ["[Buildup]", "빌드업"], ["[Instrumental]", "인스트루멘탈"], ["[Interlude]", "인터루드"], ["[Solo]", "솔로"], ["[Fade Out]", "페이드아웃"], ["[Fade In]", "페이드인"]]}, {"label": "랩 / 특수 섹션", "tags": [["[Rap]", "랩"], ["[Rap Verse]", "랩 절"], ["[Spoken Word]", "낭독"], ["[Ad-lib]", "애드립"], ["[Skit]", "스킷"], ["[Refrain]", "리프레인"]]}]}, {"id": "genre", "label": "🎵 장르", "color": "#a89fd8", "desc": "장르 & 서브장르 — 구체적일수록 좋음", "groups": [{"label": "한국어 팝 / 발라드", "tags": [["Korean ballad", "한국 발라드"], ["Korean pop", "한국 팝"], ["K-pop", "케이팝"], ["Korean indie pop", "한국 인디팝"], ["Korean R&B", "한국 알앤비"], ["Korean hip-hop", "한국 힙합"], ["trot", "트로트"], ["pansori", "판소리"]]}, {"label": "힙합 계열", "tags": [["boom bap", "붐뱁"], ["lo-fi hip-hop", "로파이 힙합"], ["underground hip-hop", "언더그라운드 힙합"], ["trap", "트랩"], ["drill", "드릴"], ["UK drill", "영국 드릴"], ["conscious rap", "컨셔스 랩"], ["lyrical rap", "서정적 랩"], ["old school hip-hop", "올드스쿨 힙합"], ["jazz rap", "재즈 랩"], ["cloud rap", "클라우드 랩"]]}, {"label": "R&B / 소울", "tags": [["neo soul", "네오소울"], ["smooth R&B", "스무스 알앤비"], ["dark R&B", "다크 알앤비"], ["alternative R&B", "얼터너티브 알앤비"], ["soul", "소울"], ["funk", "펑크"], ["quiet storm", "콰이어트 스톰"], ["new jack swing", "뉴잭스윙"]]}, {"label": "팝", "tags": [["indie pop", "인디팝"], ["bedroom pop", "베드룸팝"], ["dream pop", "드림팝"], ["synth-pop", "신스팝"], ["electropop", "일렉트로팝"], ["power pop", "파워팝"], ["art pop", "아트팝"], ["adult contemporary", "어덜트 컨템포러리"]]}, {"label": "포크 / 싱어송라이터", "tags": [["singer-songwriter", "싱어송라이터"], ["indie folk", "인디 포크"], ["acoustic pop", "어쿠스틱 팝"], ["folk pop", "포크팝"], ["americana", "아메리카나"], ["country folk", "컨트리 포크"], ["chamber folk", "챔버 포크"]]}, {"label": "재즈 / 보사노바", "tags": [["bossa nova", "보사노바"], ["jazz pop", "재즈팝"], ["cafe jazz", "카페 재즈"], ["cool jazz", "쿨 재즈"], ["smooth jazz", "스무스 재즈"], ["bebop", "비밥"], ["jazz fusion", "재즈 퓨전"], ["acid jazz", "애시드 재즈"], ["swing jazz", "스윙 재즈"], ["vocal jazz", "보컬 재즈"]]}, {"label": "록 / 얼터너티브", "tags": [["indie rock", "인디록"], ["alternative rock", "얼터너티브 록"], ["post-punk", "포스트 펑크"], ["shoegaze", "슈게이징"], ["lo-fi rock", "로파이 록"], ["soft rock", "소프트록"], ["power ballad", "파워 발라드"], ["emo", "이모"], ["post-rock", "포스트록"]]}, {"label": "일렉트로닉", "tags": [["ambient", "앰비언트"], ["lo-fi electronic", "로파이 일렉"], ["downtempo", "다운템포"], ["chillwave", "칠웨이브"], ["synthwave", "신스웨이브"], ["darkwave", "다크웨이브"], ["deep house", "딥하우스"], ["tech house", "테크하우스"], ["drum and bass", "드럼앤베이스"], ["trip-hop", "트립합"]]}, {"label": "클래식 / 오케스트라", "tags": [["cinematic", "시네마틱"], ["orchestral", "오케스트라"], ["neoclassical", "네오클래식"], ["chamber music", "실내악"], ["piano solo", "피아노 독주"], ["string quartet", "현악 사중주"], ["film score", "영화 음악"]]}, {"label": "월드 뮤직", "tags": [["afrobeats", "아프로비츠"], ["latin pop", "라틴팝"], ["reggaeton", "레게톤"], ["flamenco", "플라멩코"], ["celtic", "켈틱"], ["samba", "삼바"]]}]}, {"id": "energy", "label": "⚡ 에너지/템포", "color": "#d4a0a0", "desc": "BPM 숫자보다 체감 에너지 묘사가 더 효과적", "groups": [{"label": "빠르고 강한", "tags": [["driving", "힘차게 몰아치는"], ["relentless", "쉬지 않고 밀어붙이는"], ["urgent", "긴박한"], ["upbeat", "경쾌한"], ["uptempo", "빠른 템포"], ["energetic", "에너지 넘치는"], ["intense", "강렬한"], ["pulsing", "박동치는"]]}, {"label": "중간", "tags": [["mid-tempo", "중간 템포"], ["laid-back", "여유로운"], ["grooving", "그루브한"], ["steady", "안정적인"], ["rhythmic", "리드미컬한"]]}, {"label": "느리고 부드러운", "tags": [["slow burn", "서서히 타오르는"], ["floating", "떠다니는"], ["meditative", "명상적인"], ["hypnotic", "최면적인"], ["brooding", "우울하게 침잠하는"], ["languid", "나른한"], ["dreamy", "몽환적인"], ["half-time feel", "하프타임 느낌"]]}, {"label": "감성 / 분위기", "tags": [["melancholic", "우수에 찬"], ["euphoric", "황홀한"], ["lush", "풍성한"], ["nostalgic", "향수 어린"], ["wistful", "아련한"], ["introspective", "내향적인"], ["bittersweet", "씁쓸하고 달콤한"], ["tender", "부드럽고 섬세한"], ["longing", "그리운"], ["late night mood", "밤에 어울리는 감정"], ["chill vibe", "편안하게 듣는 분위기"], ["uplifting mood", "희망적이고 밝은 분위기"], ["epic atmosphere", "웅장한 느낌"], ["urban atmosphere", "도시적인 감각"], ["nocturnal", "야행성 밤의 느낌"], ["vintage vibe", "옛날 음악 느낌"], ["rainy day mood", "비 오는 날 감성"]]}, {"label": "BPM 참고", "tags": [["60 BPM", "느린 발라드"], ["70 BPM", "느린 편"], ["80 BPM", "중저속"], ["90 BPM", "중간"], ["100 BPM", "중간~빠른"], ["110 BPM", "빠른 편"], ["120 BPM", "빠름"], ["140 BPM", "매우 빠름"]]}]}, {"id": "instrument", "label": "🥁 악기", "color": "#8dc9a8", "desc": "구체적 악기명이 generic보다 훨씬 효과적", "groups": [{"label": "건반", "tags": [["acoustic piano", "어쿠스틱 피아노"], ["grand piano", "그랜드 피아노"], ["Rhodes", "로즈 전자 피아노"], ["Fender Rhodes", "펜더 로즈"], ["electric piano", "전자 피아노"], ["Wurlitzer", "워리처"], ["organ", "오르간"], ["synth pad", "신스 패드"], ["warm analog Rhodes", "따뜻한 빈티지 전자피아노"]]}, {"label": "기타 계열", "tags": [["acoustic guitar", "어쿠스틱 기타"], ["fingerpicked guitar", "핑거피킹 기타"], ["nylon string guitar", "나일론 현 기타"], ["electric guitar", "일렉 기타"], ["distorted guitar", "디스토션 기타"], ["clean electric guitar", "클린 일렉 기타"], ["jangly guitar", "반짝이는 인디팝 기타"], ["ambient guitar", "공간감 있는 기타"], ["ukulele", "우쿨렐레"], ["banjo", "밴조"], ["mandolin", "만돌린"]]}, {"label": "베이스", "tags": [["upright bass", "업라이트 베이스"], ["bass guitar", "베이스 기타"], ["electric bass", "일렉 베이스"], ["sub bass", "서브 베이스"], ["rolling bass", "구르는 베이스"], ["fretless bass", "프렛리스 베이스"], ["slap bass", "슬랩 베이스"], ["acid bass line", "애시드 베이스 라인"]]}, {"label": "드럼 / 퍼커션", "tags": [["acoustic drums", "어쿠스틱 드럼"], ["brushed drums", "브러시 드럼"], ["TR-808", "808 드럼머신"], ["TR-909", "909 드럼머신"], ["boom bap drums", "붐뱁 드럼"], ["tight snare", "타이트한 스네어"], ["punchy kick", "펀치감 있는 킥"], ["cajon", "카혼"], ["congas", "콩가"], ["tambourine", "탬버린"], ["light percussion", "가벼운 타악기"], ["vinyl crackle", "바이닐 크래클"], ["trap hi-hats", "트랩 하이햇"], ["four-on-the-floor", "하우스 킥 패턴"], ["gated reverb snare", "게이티드 리버브 스네어"]]}, {"label": "현악기", "tags": [["violin", "바이올린"], ["cello", "첼로"], ["string quartet", "현악 사중주"], ["orchestral strings", "오케스트라 현악"], ["soft strings", "부드러운 현악"], ["pizzicato strings", "피치카토 현악"], ["string ensemble", "스트링 앙상블"]]}, {"label": "관악기", "tags": [["trumpet", "트럼펫"], ["muted trumpet", "뮤트 트럼펫"], ["flugelhorn", "플뤼겔호른"], ["trombone", "트롬본"], ["saxophone", "색소폰"], ["alto sax", "알토 색소폰"], ["tenor sax", "테너 색소폰"], ["flute", "플루트"], ["brass section", "브라스 섹션"]]}, {"label": "신스 / 전자음", "tags": [["Moog synth", "무그 신스"], ["arp synth", "아르페지오 신스"], ["pad synth", "패드 신스"], ["synth lead", "신스 리드"], ["analog synth", "아날로그 신스"], ["vocoder", "보코더"], ["808 bass", "808 베이스"], ["supersaw synth", "EDM용 두껍고 화려한 신스"], ["chiptune", "칩튠"]]}, {"label": "기타 악기 & 질감", "tags": [["harp", "하프"], ["marimba", "마림바"], ["vibraphone", "비브라폰"], ["sitar", "시타르"], ["shamisen", "샤미센"], ["subtle chime textures", "은은한 차임 텍스처"], ["cinematic pads", "시네마틱 패드"], ["warm bass swells", "따뜻한 베이스 스웰"], ["vintage organ harmonic bed", "빈티지 오르간 하모닉 베드"], ["soft electric piano chords", "부드러운 일렉 피아노 코드"]]}]}, {"id": "production", "label": "🎚️ 프로덕션", "color": "#c9c47e", "desc": "믹스 질감 & 레코딩 스타일", "groups": [{"label": "✅ 권장 (studio feel)", "tags": [["studio recording", "스튜디오 녹음"], ["clean studio production", "클린 스튜디오"], ["close mic", "근거리 마이크"], ["tight mix", "타이트한 믹스"], ["dry and punchy", "건조하고 펀치감"], ["pristine mix", "깨끗한 믹스"], ["analog warmth", "아날로그 따뜻함"], ["tape saturation", "테이프 새추레이션"], ["compressed", "컴프레스된"], ["warm analog tape tone", "따뜻한 아날로그 테이프 톤"]]}, {"label": "Lo-fi / Vintage", "tags": [["lo-fi", "로파이"], ["lo-fi warmth", "로파이 따뜻함"], ["bedroom recording", "방 녹음"], ["tape hiss", "테이프 히스"], ["vinyl warmth", "바이닐 따뜻함"], ["vinyl texture", "LP 레코드 느낌"], ["raw recording", "날것의 녹음"], ["gritty", "거친"], ["dusty samples", "먼지 낀 샘플"]]}, {"label": "모던 / 클린", "tags": [["modern production", "모던 프로덕션"], ["polished", "세련된"], ["wide stereo", "와이드 스테레오"], ["dense layers", "촘촘한 레이어"], ["sparse arrangement", "절제된 편곡"], ["minimal", "미니멀"], ["radio-ready", "라디오용"], ["organic production", "실제 연주 느낌"], ["sidechained bass", "킥에 맞춰 펌핑되는 베이스"]]}, {"label": "리버브 / 공간감", "tags": [["no reverb", "리버브 없음"], ["dry", "건조한"], ["intimate space", "아늑한 공간"], ["room sound", "룸 사운드"], ["warm reverb", "따뜻한 리버브"], ["plate reverb", "플레이트 리버브"], ["huge reverb", "매우 넓은 리버브"], ["vintage plate reverb", "옛날 스튜디오 리버브"], ["tape echo", "테이프 에코"], ["heavy delay", "강한 딜레이"], ["tape delay", "테이프 딜레이"]]}, {"label": "키 / 조성", "tags": [["minor key", "단조"], ["major key", "장조"], ["melancholic minor", "우울한 단조"], ["C minor", "다단조"], ["A minor", "가단조"], ["G major", "사장조"], ["D major", "라장조"], ["E minor", "미단조"], ["modal", "모달"], ["pentatonic", "펜타토닉"]]}]}, {"id": "vocal", "label": "🎤 보컬", "color": "#f0a0c0", "desc": "보컬 캐릭터, 스타일, 이펙트", "groups": [{"label": "성별 / 캐릭터", "tags": [["male vocal", "남성 보컬"], ["female vocal", "여성 보컬"], ["duet", "듀엣"], ["choir", "합창"], ["male and female duet", "혼성 듀엣"], ["baritone", "바리톤"], ["tenor", "테너"], ["soprano", "소프라노"], ["mezzo-soprano", "메조소프라노"]]}, {"label": "보컬 스타일", "tags": [["whisper", "속삭임"], ["spoken word", "낭독"], ["rap", "랩"], ["harmonies", "화음"], ["falsetto", "팔세토"], ["belting", "벨팅"], ["growl", "그로울"], ["crooning", "크루닝"], ["breathy", "숨결 섞인"], ["intimate vocal", "친밀한 보컬"], ["warm vocal", "따뜻한 보컬"], ["emotive vocal", "감정적인 보컬"], ["soft vocal", "부드러운 보컬"], ["raw vocals", "날것의 보컬"], ["soulful vocal", "감정이 깊게 담긴"], ["airy vocal", "공기감 느껴지는"], ["layered vocals", "여러 트랙이 쌓인"], ["dreamy vocal", "몽환적인 보컬"]]}, {"label": "✅ 이펙트 없음 (권장)", "tags": [["no autotune", "오토튠 없음"], ["no reverb", "리버브 없음"], ["dry vocal", "건조한 보컬"], ["natural pitch", "자연스러운 음정"], ["no effects", "이펙트 없음"], ["clean vocal", "클린 보컬"]]}, {"label": "이펙트 있음 (선택)", "tags": [["reverb", "리버브"], ["delay", "딜레이"], ["autotune", "오토튠"], ["distorted vocals", "디스토션 보컬"], ["filtered vocals", "필터 보컬"], ["vocoder", "보코더"], ["telephone effect", "전화기 효과"], ["pitched vocal chops", "피치드 보컬 촙"], ["ad-libs", "애드립"]]}, {"label": "보컬 감정", "tags": [["vulnerable", "솔직하고 취약한"], ["powerful", "강렬한"], ["soft", "부드러운"], ["aggressive", "공격적인"], ["melancholic", "우수에 찬"], ["joyful", "기쁜"], ["sultry", "관능적인"], ["tender", "섬세하고 부드러운"], ["longing", "그리운"], ["heartfelt", "진심 어린"], ["raw emotion", "날것의 감정"]]}]}, {"id": "groove", "label": "🎶 멜로디/그루브", "color": "#a8c4a0", "desc": "멜로디 방향 & 그루브 느낌 유도 키워드", "groups": [{"label": "멜로디 방향", "tags": [["catchy hook", "중독성 있는 훅"], ["repetitive melody", "반복 멜로디"], ["earworm", "머릿속에 맴도는"], ["lyrical melody", "서정적 선율"], ["flowing melodic line", "흐르는 선율"], ["sparse melody", "절제된 멜로디"], ["ascending melody", "상승하는 선율"], ["descending melody", "하강하는 선율"], ["melancholic minor melody", "우울한 단조 선율"], ["bright melody", "밝은 선율"]]}, {"label": "그루브 & 리듬감", "tags": [["swung rhythm", "스윙 리듬"], ["shuffle feel", "셔플 느낌"], ["syncopated", "당김음"], ["bouncy", "통통 튀는"], ["danceable", "춤추게 만드는"], ["heavy groove", "무거운 그루브"], ["laid-back groove", "여유로운 그루브"], ["half-time feel", "하프타임 느낌"], ["offbeat rhythm", "오프비트 리듬"], ["pocket groove", "포켓 그루브"], ["driving rhythm", "힘차게 몰아치는 리듬"], ["finger snap groove", "손가락 스냅 미니멀 리듬"], ["clap rhythm", "손뼉 중심 리듬"], ["latin groove", "라틴 음악 특유 리듬"]]}, {"label": "코드 & 하모니", "tags": [["lush chords", "풍성한 코드"], ["sparse chords", "절제된 코드"], ["jazz chords", "재즈 코드"], ["minor chords", "단조 코드"], ["major chords", "장조 코드"], ["sus chords", "서스 코드"], ["seventh chords", "세븐스 코드"], ["chromatic harmony", "반음계 화성"], ["modal harmony", "모달 화성"]]}]}, {"id": "season", "label": "🍂 계절/날씨", "color": "#b8c99a", "desc": "계절감·날씨·시간대를 음악으로 표현하는 키워드", "groups": [{"label": "🌸 봄", "tags": [["spring breeze", "봄바람"], ["blooming", "꽃이 피는"], ["cherry blossom", "벚꽃"], ["fresh and bright", "싱그럽고 밝은"], ["renewal", "새로운 시작"], ["gentle warmth", "포근한 따뜻함"], ["hopeful", "희망적인"], ["dewy morning", "이슬 맺힌 아침"], ["soft sunlight", "부드러운 햇살"]]}, {"label": "☀️ 여름", "tags": [["summer heat", "여름 열기"], ["tropical", "열대의"], ["sun-drenched", "햇살 가득한"], ["beach vibes", "해변 느낌"], ["hazy afternoon", "아지랑이 낀 오후"], ["lazy summer", "나른한 여름"], ["fireflies", "반딧불"], ["electric summer", "강렬한 여름"]]}, {"label": "🍂 가을", "tags": [["autumn melancholy", "가을 우수"], ["falling leaves", "낙엽 지는"], ["crisp autumn air", "선선한 가을 공기"], ["amber and gold", "황금빛 낙엽"], ["fading warmth", "사그라드는 온기"], ["nostalgic autumn", "향수 어린 가을"], ["twilight", "황혼"], ["rainy autumn", "가을비"], ["lonely road", "쓸쓸한 길"]]}, {"label": "❄️ 겨울", "tags": [["winter cold", "겨울 추위"], ["snow", "눈"], ["frozen", "얼어붙은"], ["blizzard", "눈보라"], ["silent winter", "고요한 겨울"], ["frost", "서리"], ["cozy indoor", "아늑한 실내"], ["cold and lonely", "차갑고 외로운"], ["winter night", "겨울 밤"], ["warm fireplace", "따뜻한 벽난로"]]}, {"label": "🌤️ 날씨 & 자연", "tags": [["rainy day", "비 오는 날"], ["thunderstorm", "천둥번개"], ["foggy", "안개 낀"], ["cloudy", "흐린"], ["after rain", "비 갠 후"], ["wind", "바람"], ["golden hour", "골든아워"], ["moonlight", "달빛"], ["starry night", "별빛 가득한 밤"]]}, {"label": "🕐 시간대 & 장소", "tags": [["early morning", "이른 아침"], ["late night", "늦은 밤"], ["3am", "새벽 3시"], ["city at night", "밤의 도시"], ["empty street", "텅 빈 거리"], ["rooftop", "옥상"], ["window seat", "창가 자리"], ["countryside", "시골"], ["mountain", "산속"]]}]}, {"id": "pitch", "label": "🎼 음정/음역", "color": "#c4a8d4", "desc": "⚠️ 직접 지정 불가 — 간접 유도 키워드 모음", "groups": [{"label": "⚠️ 주의사항", "info": true, "tags": [["indirect pitch control only", "직접 음정 지정 불가 간접 유도만 가능"], ["results may vary", "시도마다 결과 다름"], ["combine with genre for best effect", "장르 태그와 함께 쓸 때 효과적"]]}, {"label": "음역대 높낮이", "tags": [["high pitch", "높은 음정"], ["low pitch", "낮은 음정"], ["mid range", "중간 음역"], ["upper register", "상단 음역"], ["lower register", "하단 음역"], ["wide vocal range", "넓은 음역"]]}, {"label": "남성 보컬 음역", "tags": [["bass vocal", "베이스 보컬 매우 낮음"], ["baritone", "바리톤 낮은 중음"], ["tenor", "테너 높은 남성"], ["countertenor", "카운터테너 매우 높은 남성"], ["deep male voice", "깊고 낮은 남성 목소리"]]}, {"label": "여성 보컬 음역", "tags": [["contralto", "콘트랄토 가장 낮은 여성"], ["mezzo-soprano", "메조소프라노 중간 여성"], ["soprano", "소프라노 높은 여성"], ["high female voice", "높은 여성 목소리"], ["low female voice", "낮은 여성 목소리"]]}, {"label": "멜로디 음역 느낌", "tags": [["soaring melody", "치솟는 멜로디"], ["low rumbling melody", "낮게 울리는 멜로디"], ["falsetto", "팔세토 두성"], ["chest voice", "흉성 가슴 소리"], ["head voice", "두성"], ["mixed voice", "믹스드 보이스"]]}, {"label": "조성으로 간접 유도", "tags": [["C minor", "다단조 어둡고 무거운"], ["A minor", "가단조 슬프고 감성적"], ["E minor", "미단조 서정적"], ["G major", "사장조 밝고 따뜻한"], ["D major", "라장조 화려하고 생동감"], ["F major", "바장조 따뜻하고 부드러운"], ["B minor", "나단조 쓸쓸하고 깊은"], ["pentatonic scale", "펜타토닉 동양적 느낌"]]}, {"label": "음색 & 울림", "tags": [["bright tone", "밝은 음색"], ["dark tone", "어두운 음색"], ["warm tone", "따뜻한 음색"], ["resonant", "울림이 풍부한"], ["thin voice", "얇은 목소리"], ["full bodied voice", "풍성한 목소리"], ["breathy", "숨결 섞인"], ["smooth tone", "부드러운 음색"]]}]}, {"id": "fusion", "label": "🔀 장르 조합", "color": "#d4a8a0", "desc": "두 장르를 섞어 독특한 색깔을 만드는 하이브리드 조합", "groups": [{"label": "🎤 보컬 + 랩 조합", "tags": [["Korean ballad rap", "발라드랩 감성+랩"], ["R&B rap", "알앤비랩"], ["neo soul rap", "네오소울랩"], ["jazz rap", "재즈랩"], ["indie folk rap", "인디포크랩"], ["trap ballad", "트랩발라드"], ["melodic rap", "멜로딕랩"], ["spoken word ballad", "낭독형 발라드"]]}, {"label": "🎸 어쿠스틱 + 일렉트로닉", "tags": [["acoustic electronic", "어쿠스틱+전자음"], ["folk electronic", "포크+일렉트로닉"], ["acoustic trap", "어쿠스틱+트랩"], ["guitar and synth", "기타+신스"], ["piano and 808", "피아노+808"], ["strings and electronic", "현악+전자음"]]}, {"label": "🌙 감성 + 클럽", "tags": [["emotional club", "감성 클럽"], ["sad banger", "슬픈 클럽 뱅어"], ["melancholic dance", "우울한 댄스"], ["dark R&B club", "다크 알앤비 클럽"], ["chill and danceable", "칠+댄서블"], ["lo-fi club", "로파이 클럽"], ["cinematic dance", "시네마틱 댄스"]]}, {"label": "🎷 재즈 + 현대", "tags": [["jazz hip-hop", "재즈힙합"], ["jazz R&B", "재즈알앤비"], ["jazz pop", "재즈팝"], ["bossa nova pop", "보사노바팝"], ["jazz electronic", "재즈+일렉트로닉"], ["nu jazz", "뉴재즈 현대적 재즈"], ["jazz trap", "재즈트랩"]]}, {"label": "🎻 클래식 + 현대", "tags": [["neoclassical pop", "네오클래식팝"], ["orchestral hip-hop", "오케스트라힙합"], ["cinematic R&B", "시네마틱알앤비"], ["chamber pop", "챔버팝"], ["string quartet and beats", "현악사중주+비트"], ["baroque pop", "바로크팝"], ["orchestral trap", "오케스트라트랩"]]}, {"label": "🌏 한국 전통 + 현대", "tags": [["trot and pop", "트로트팝"], ["pansori and hip-hop", "판소리힙합"], ["Korean traditional and electronic", "국악+전자음"], ["fusion gugak", "퓨전국악"], ["K-folk and pop", "한국민요팝"]]}, {"label": "🌊 무드 기반 조합", "tags": [["sad and groovy", "슬프지만 그루브한"], ["dark and beautiful", "어둡고 아름다운"], ["hopeful and melancholic", "희망적이지만 우울한"], ["quiet and powerful", "조용하지만 강렬한"], ["epic and intimate", "웅장하지만 친밀한"]]}]}, {"id": "intro", "label": "⚡ 인트로 치트키", "color": "#e8a87c", "desc": "첫 3초에 스킵을 막는 인트로 전략 — 복붙용 프롬프트", "groups": [{"label": "🔥 3가지 핵심 전략", "info": true, "tags": [["Cold open with dry vocal / No long intro", "보컬 선입 — 0초에 보컬 바로 시작"], ["Drop immediately into groove / No intro buildup", "그루브 선입 — 드럼/베이스로 바로 시작"], ["Open with a single signature sound / Immediate mood definition", "시그니처 사운드 — 핵심 사운드 하나로 장악"]]}, {"label": "❌ 스킵 유발", "danger": true, "tags": [["emotional intro with soft pad and gradual buildup", "소프트 패드+점진적 빌드업 이탈률 90%"], ["cinematic intro atmospheric start", "시네마틱 인트로 분위기만 쌓기"], ["slow build intro", "느린 빌드업 인트로"]]}, {"label": "✅ 스크롤을 멈추는 표현", "tags": [["cold open with dry vocal", "드라이 보컬로 콜드오픈"], ["no intro", "인트로 없음"], ["immediate engagement", "즉각적 몰입"], ["start with impact sound", "임팩트 사운드로 시작"], ["no buildup", "빌드업 없음"], ["instant hook", "즉각적인 훅"], ["immediate groove", "즉각적인 그루브"]]}, {"label": "🎤 장르별 인트로", "info": true, "tags": [["Open with a hard 808 hit and dry rap vocal no intro", "힙합 인트로"], ["Start with dry vocal hook and minimal pluck no buildup", "팝 인트로"], ["Open with Rhodes chord and vocal chop intimate and dry", "R&B 인트로"], ["Drop straight into kick and bass groove no intro buildup", "EDM 인트로"]]}, {"label": "📋 3초 체크리스트", "info": true, "tags": [["0초에 보컬 또는 드럼/베이스가 치고 나오는가?", "Q1. 0초 임팩트"], ["1초 이내에 장르가 직관적으로 느껴지는가?", "Q2. 장르 명확성"], ["2초 안에 따라 흥얼거릴 반복 요소 Loop가 있는가?", "Q3. 반복 훅"]]}]}, {"id": "guide", "label": "📝 프롬프트 작성법", "color": "#90c4a0", "desc": "PDF 가이드 기반 — 좋은 프롬프트를 만드는 3단계 공식", "groups": [{"label": "📌 3단계 공식", "info": true, "tags": [["1단계 장르 (시대+질감+분위기 포함)", "장르명만 쓰지 말고 시대/질감/분위기까지"], ["2단계 무드 (감정/분위기 단어)", "무드가 붙어야 곡의 표정이 생김"], ["3단계 악기와 질감 (구체적으로)", "장르명보다 악기와 질감이 결과를 바꿈"]]}, {"label": "❌ 너무 단순한 표현", "danger": true, "tags": [["Pop", "너무 단순 시대/질감 없음"], ["Rock", "너무 단순"], ["R&B", "너무 단순"], ["Brazilian Bossa Nova", "무드 없음 껍데기만 나옴"]]}, {"label": "✅ 좋은 장르 표현", "tags": [["Early 2000s glossy pop", "2000년대 초 화려한 팝"], ["1970s Motown soul", "1970년대 모타운 소울"], ["Dreamy late-night R&B", "몽환적인 심야 알앤비"], ["Nocturnal synth-pop", "야행성 신스팝"], ["Rainy city pop ballad", "빗속 시티팝 발라드"], ["An intimate sophisticated Brazilian Bossa Nova track", "친밀하고 세련된 보사노바"]]}, {"label": "✅ 무드 단어 모음", "tags": [["warm", "따뜻한"], ["intimate", "친밀한"], ["wistful", "아련한"], ["airy", "공기감 있는"], ["cinematic", "영화적인"], ["melancholic", "우울하고 감성적인"], ["nocturnal", "야행성"], ["romantic tension", "로맨틱한 긴장감"], ["dreamy", "몽환적인"], ["gritty", "거친"], ["sophisticated", "세련된"], ["haunting", "귓가에 맴도는"]]}, {"label": "✅ 악기+질감 표현", "tags": [["warm analog tape tone", "따뜻한 아날로그 테이프 톤"], ["vintage organ harmonic bed", "빈티지 오르간 하모닉 베드"], ["tight tambourine groove", "타이트한 탬버린 그루브"], ["soft electric piano chords", "부드러운 일렉 피아노 코드"], ["low-passed drums", "로우패스 필터 드럼"], ["cinematic pads", "시네마틱 패드"], ["nylon-string guitar", "나일론 현 기타"], ["warm bass swells", "따뜻한 베이스 스웰"], ["subtle chime textures", "은은한 차임 텍스처"]]}, {"label": "💡 완성 프롬프트 예시", "info": true, "tags": [["1970s Motown soul warm analog Rhodes tight tambourine groove intimate female vocal", "1970년대 소울 완성 예시"], ["Dreamy late-night R&B soft electric piano chords breathy female vocal sub bass", "심야 알앤비 완성 예시"], ["Rainy city pop ballad fingerpicked guitar warm reverb emotive male vocal no autotune", "빗속 시티팝 발라드 완성 예시"], ["Korean ballad rap acoustic piano boom bap drums dry rap vocal no intro", "한국 발라드랩 완성 예시"]]}]}, {"id": "lyrics", "label": "📄 가사 필드 태그", "color": "#d4b896", "desc": "가사(Lyrics) 필드 안에 넣는 메타태그 — 구간별 사운드를 세밀하게 제어", "groups": [{"label": "💡 핵심 원칙", "info": true, "tags": [["Style 필드 = 전체 세계관 설정", "장르/분위기/악기 전체 곡의 방향"], ["Lyrics 필드 = 구간별 행동 제어", "각 섹션 안에서 무슨 일이 일어날지 지정"], ["섹션당 태그 2~4개가 최적", "너무 많으면 충돌 적을수록 효과적"], ["수정 순서 구조 후렴 브릿지 Style 마지막", "Style은 가장 나중에 건드릴 것"]]}, {"label": "🎛️ 파라미터 태그 — 구간 안에 세부 지정 (v5 핵심)", "tags": [["[Verse: whispered vocals, acoustic guitar only]", "속삭이는 보컬+어쿠스틱 기타만"], ["[Chorus: full band, powerful vocal, high energy]", "풀밴드+강한 보컬+고에너지"], ["[Bridge: vocal only, no instruments]", "보컬만 악기 없음"], ["[Verse: soft piano, intimate]", "부드러운 피아노 친밀한 분위기"], ["[Pre-Chorus: building tension, strings enter]", "긴장감 고조 현악기 진입"], ["[Chorus: key change, bigger production]", "전조 더 큰 프로덕션"], ["[Outro: fade, just guitar and voice]", "페이드 기타와 보컬만"], ["[Verse: dry vocal, no reverb, close mic]", "드라이 보컬 리버브 없음"], ["[Bridge: tempo slows, half-time feel]", "템포 느려짐 하프타임"], ["[Chorus: doubled vocals, wide stereo]", "보컬 더블링 와이드 스테레오"]]}, {"label": "🎤 보컬 제어 태그", "tags": [["[no vocals]", "보컬 없음 인스트루멘탈"], ["[vocals only]", "보컬만 반주 없음"], ["[female vocals]", "여성 보컬"], ["[male vocals]", "남성 보컬"], ["[duet]", "듀엣"], ["[choir]", "합창"], ["[whispered]", "속삭임"], ["[falsetto]", "팔세토"], ["[spoken]", "낭독"], ["[rap]", "랩"], ["[harmonies]", "화음 추가"], ["[ad-libs]", "애드립"], ["[call and response]", "콜 앤 리스폰스"], ["[vocal chops]", "보컬 촙 이펙트"]]}, {"label": "⚡ 에너지 전환 태그", "tags": [["[big energy]", "큰 에너지로 전환"], ["[energy drop]", "에너지 급감"], ["[breakdown]", "브레이크다운 에너지 완전 해제"], ["[climax]", "클라이맥스 최고조"], ["[tension build]", "긴장감 고조"], ["[release]", "해소 긴장 풀기"], ["[stripped back]", "편곡 줄이기 미니멀하게"], ["[full production]", "풀 프로덕션으로 복귀"], ["[quiet]", "조용하게"], ["[loud]", "크게"], ["[explosive entry]", "폭발적 진입"]]}, {"label": "🎸 구간별 악기 지정", "tags": [["[piano only]", "피아노만"], ["[guitar only]", "기타만"], ["[drums only]", "드럼만"], ["[bass and drums]", "베이스+드럼만"], ["[strings enter]", "현악기 진입"], ["[strings out]", "현악기 퇴장"], ["[no drums]", "드럼 없음"], ["[acoustic only]", "어쿠스틱 악기만"], ["[full orchestra]", "풀 오케스트라"], ["[808 drop]", "808 드롭"], ["[percussion heavy]", "타악기 강조"]]}, {"label": "🌊 분위기 전환 태그", "tags": [["[melancholic]", "우울하게"], ["[hopeful]", "희망적으로"], ["[aggressive]", "공격적으로"], ["[tender]", "부드럽고 섬세하게"], ["[triumphant]", "승리감"], ["[desperate]", "절박하게"], ["[nostalgic]", "향수 어린"], ["[dreamy]", "몽환적으로"], ["[dark]", "어둡게"], ["[bright]", "밝게"], ["[intimate]", "친밀하게"], ["[epic]", "웅장하게"]]}, {"label": "🔄 고급 테크닉 태그 (v5 전용)", "tags": [["[key change]", "전조 음조 변경"], ["[tempo change]", "템포 변경"], ["[breakdown]", "브레이크다운"], ["[modulation]", "조성 변화"], ["[reprise]", "재현 앞 구간 반복"], ["[a cappella]", "아카펠라"], ["[cold ending]", "콜드 엔딩 갑자기 끝냄"], ["[fade out]", "페이드아웃"]]}]}, {"id": "chords", "label": "🎹 다이아토닉 코드", "color": "#c4a8d4", "desc": "12 Key 7th Diatonic Chords — 각 키의 도수별 코드", "groups": [{"label": "💡 도수별 역할", "info": true, "tags": [["IM7", "으뜸화음 안정 집"], ["IIm7", "서브도미넌트 부드러운 움직임"], ["IIIm7", "토닉 계열 색채감"], ["IVM7", "서브도미넌트 밝고 열린 느낌"], ["V7", "도미넌트 긴장 해결 욕구"], ["VIm7", "관계단조 슬프고 감성적"], ["VIIm7(b5)", "하프 디미니쉬 불안정 색채적"]]}, {"label": "C key", "tags": [["CM7", "IM7"], ["Dm7", "IIm7"], ["Em7", "IIIm7"], ["FM7", "IVM7"], ["G7", "V7"], ["Am7", "VIm7"], ["Bm7(b5)", "VIIm7b5"]]}, {"label": "F key", "tags": [["FM7", "IM7"], ["Gm7", "IIm7"], ["Am7", "IIIm7"], ["BbM7", "IVM7"], ["C7", "V7"], ["Dm7", "VIm7"], ["Em7(b5)", "VIIm7b5"]]}, {"label": "Bb key", "tags": [["BbM7", "IM7"], ["Cm7", "IIm7"], ["Dm7", "IIIm7"], ["EbM7", "IVM7"], ["F7", "V7"], ["Gm7", "VIm7"], ["Am7(b5)", "VIIm7b5"]]}, {"label": "Eb key", "tags": [["EbM7", "IM7"], ["Fm7", "IIm7"], ["Gm7", "IIIm7"], ["AbM7", "IVM7"], ["Bb7", "V7"], ["Cm7", "VIm7"], ["Dm7(b5)", "VIIm7b5"]]}, {"label": "Ab key", "tags": [["AbM7", "IM7"], ["Bbm7", "IIm7"], ["Cm7", "IIIm7"], ["DbM7", "IVM7"], ["Eb7", "V7"], ["Fm7", "VIm7"], ["Gm7(b5)", "VIIm7b5"]]}, {"label": "Db key", "tags": [["DbM7", "IM7"], ["Ebm7", "IIm7"], ["Fm7", "IIIm7"], ["GbM7", "IVM7"], ["Ab7", "V7"], ["Bbm7", "VIm7"], ["Cm7(b5)", "VIIm7b5"]]}, {"label": "Gb key", "tags": [["GbM7", "IM7"], ["Abm7", "IIm7"], ["Bbm7", "IIIm7"], ["CbM7", "IVM7"], ["Db7", "V7"], ["Ebm7", "VIm7"], ["Fm7(b5)", "VIIm7b5"]]}, {"label": "B key", "tags": [["BM7", "IM7"], ["C#m7", "IIm7"], ["D#m7", "IIIm7"], ["EM7", "IVM7"], ["F#7", "V7"], ["G#m7", "VIm7"], ["A#m7(b5)", "VIIm7b5"]]}, {"label": "E key", "tags": [["EM7", "IM7"], ["F#m7", "IIm7"], ["G#m7", "IIIm7"], ["AM7", "IVM7"], ["B7", "V7"], ["C#m7", "VIm7"], ["D#m7(b5)", "VIIm7b5"]]}, {"label": "A key", "tags": [["AM7", "IM7"], ["Bm7", "IIm7"], ["C#m7", "IIIm7"], ["DM7", "IVM7"], ["E7", "V7"], ["F#m7", "VIm7"], ["G#m7(b5)", "VIIm7b5"]]}, {"label": "D key", "tags": [["DM7", "IM7"], ["Em7", "IIm7"], ["F#m7", "IIIm7"], ["GM7", "IVM7"], ["A7", "V7"], ["Bm7", "VIm7"], ["C#m7(b5)", "VIIm7b5"]]}, {"label": "G key", "tags": [["GM7", "IM7"], ["Am7", "IIm7"], ["Bm7", "IIIm7"], ["CM7", "IVM7"], ["D7", "V7"], ["Em7", "VIm7"], ["F#m7(b5)", "VIIm7b5"]]}, {"label": "🔥 자주 쓰는 코드 진행", "info": true, "tags": [["I - V - VIm - IV", "팝 4코드 C-G-Am-F"], ["IIm7 - V7 - IM7", "재즈 투파이브원 2-5-1"], ["IM7 - IIIm7 - IVM7 - V7", "서정적 발라드 진행"], ["VIm - IV - I - V", "감성 팝 발라드 Am-F-C-G"], ["IIm7 - V7 - IM7 - VIm7", "재즈 팝 순환 진행"], ["Im - bVII - bVI - V7", "플라멩코/드라마틱 단조"], ["I - IV - VIm - V", "업비트 팝 진행"]]}]}, {"id": "songform", "label": "🗂️ 곡 구조", "color": "#90b8d0", "desc": "A-B-C 섹션 표기법 & 대표 곡 형식", "groups": [{"label": "💡 섹션 표기 기본 개념", "info": true, "tags": [["A = 절 (Verse)", "스토리 전개 구간 가사 내용이 바뀜"], ["B = 후렴 (Chorus)", "반복되는 핵심 훅 가사 동일"], ["C = 브릿지 (Bridge)", "전환/대비 구간 한 번만 등장"], ["Pre = 프리코러스", "A에서 B로 연결 긴장감"], ["같은 알파벳 = 같은 멜로디", "A1 A2 = 멜로디 같고 가사만 다름"]]}, {"label": "🎵 팝/발라드 기본 형식", "tags": [["I - A - B - A - B - C - B - O", "표준 팝 구조"], ["A - A - B - A", "AABA 32마디 재즈/올드팝"], ["A - B - A - B - C - B", "절-후렴 반복+브릿지 가장 보편적"], ["A - A - B - B", "단순 반복형 어린이 동요 민요"], ["I - A - Pre - B - A - Pre - B - C - B - B - O", "완전형 팝 구조 프리코러스 포함"]]}, {"label": "🎧 힙합 / R&B 구조", "tags": [["I - A(Rap) - B(Hook) - A(Rap) - B(Hook) - C - B", "힙합 기본 구조"], ["A - A - B - A - A - B - C - B", "붐뱁 클래식 구조"], ["I - Hook - A - Hook - A - Hook - O", "훅 우선형 트랩/현대 힙합"], ["I(드롭) - A - B - A - B - C - B", "인트로 드롭형"]]}, {"label": "🎸 록 / 인디 구조", "tags": [["I - A - A - B - A - B - C - B - O", "록 표준 구조"], ["A - B - A - B - Solo - B - O", "기타 솔로 포함 구조"], ["A - A - A - B", "블루스형 AAB 반복"]]}, {"label": "🌙 발라드 구조", "tags": [["I - A1 - A2 - B - A3 - B - C - B - O", "한국 발라드 정석"], ["A1 - A2 - B - A3 - B", "단순 감성형 짧은 발라드"], ["I - A - Pre - B - A - Pre - B(전조) - O", "전조 발라드 클라이맥스 전조"], ["A - B - A - B - C(spoken) - B", "낭독 브릿지 발라드"]]}, {"label": "🎛️ EDM 구조", "tags": [["I - Buildup - Drop - A - Buildup - Drop - Break - Drop - O", "EDM 기본 구조"], ["I(Drop) - A - B - A - B - O", "팝EDM 혼합형"], ["Buildup - Drop - Breakdown - Buildup - Drop", "테크노/하우스 미니멀"]]}, {"label": "🔀 특수 구조", "tags": [["A - A - B (12마디)", "블루스 12마디 기본형"], ["Through-composed A-B-C-D", "쓰루컴포즈드 반복 없이 계속 전개"], ["ABACABA", "론도형 클래식 구조"], ["Verse-Chorus-Verse (no bridge)", "브릿지 없는 단순형"]]}, {"label": "📋 수노 가사 필드 구조 템플릿", "info": true, "tags": [["[Intro] / [Verse 1] 가사 / [Pre-Chorus] 가사 / [Chorus] 가사 / [Verse 2] 가사 / [Chorus] 가사 / [Bridge] 가사 / [Chorus] / [Outro]", "표준 팝 템플릿"], ["[Verse 1: soft piano, dry vocal] 가사 / [Chorus: full band, powerful] 가사 / [Bridge: vocal only, stripped back] 가사 / [Chorus: key change, bigger] 가사", "한국 발라드 파라미터 템플릿"], ["[Intro: 808 drop, no buildup] / [Verse: dry rap vocal] 가사 / [Hook: melodic, Rhodes] 가사 / [Verse 2] 가사 / [Hook: full energy] 가사", "발라드랩 파라미터 템플릿"]]}]},
+  {"id": "vibe", "label": "🎬 상황별 분위기", "color": "#c4a87c", "desc": "드라이브, 바다, 산책 등 구체적인 장면/상황을 음악으로 표현하는 키워드 조합", "groups": [{"label": "🚗 드라이브", "tags": [["night drive", "심야 드라이브"], ["highway cruise", "고속도로 크루징"], ["city lights drive", "도심 야경 드라이브"], ["open road", "탁 트인 도로"], ["road trip", "로드트립"], ["late night cruise", "늦은 밤 크루징"], ["driving at sunset", "노을 드라이브"], ["freeway at dawn", "새벽 고속도로"], ["rain on windshield", "빗속 드라이브"], ["windows down", "창문 열고 달리는"], ["lone headlights", "외로운 헤드라이트"], ["neon signs blur", "네온 사인이 번지는"]]}, {"label": "🌊 바다 / 해변", "tags": [["beach party", "해변 파티"], ["ocean waves", "파도 소리"], ["summer beach", "여름 해변"], ["seaside walk", "해안가 산책"], ["surfing", "서핑"], ["sunset at sea", "바다 노을"], ["bonfire on beach", "해변 모닥불"], ["salty breeze", "짭조름한 바닷바람"], ["blue horizon", "파란 수평선"], ["barefoot on sand", "맨발로 모래 위를"], ["ocean at night", "밤바다"], ["harbor lights", "항구의 불빛"]]}, {"label": "🌿 산책 / 자연", "tags": [["evening stroll", "저녁 산책"], ["park walk", "공원 산책"], ["forest path", "숲길"], ["mountain trail", "산길 트레킹"], ["riverside walk", "강변 산책"], ["morning jog", "아침 조깅"], ["autumn leaves walk", "단풍 속 산책"], ["countryside road", "시골 길"], ["quiet neighborhood", "조용한 동네 골목"], ["gentle breeze", "부드러운 바람"], ["birdsong morning", "새소리 가득한 아침"], ["peaceful nature", "평화로운 자연"]]}, {"label": "💑 연인 / 로맨스", "tags": [["couple walk", "연인과 산책"], ["first date", "첫 데이트"], ["rooftop romance", "옥상 로맨스"], ["candlelit dinner", "촛불 저녁 식사"], ["slow dance", "슬로우 댄스"], ["holding hands", "손을 잡고"], ["whispering love", "사랑을 속삭이는"], ["stargazing together", "함께 별 보기"], ["kissing in the rain", "빗속의 키스"], ["lazy sunday morning", "나른한 일요일 아침"], ["pillow talk", "베개 위의 대화"], ["missing you", "그리움"]]}, {"label": "🌙 혼자만의 시간 / 감성", "tags": [["alone at midnight", "한밤중 혼자"], ["late night thoughts", "늦은 밤 혼자 생각"], ["rainy window", "빗소리 들으며 창가에"], ["cafe alone", "카페에서 혼자"], ["reading in silence", "조용히 책 읽기"], ["journaling", "일기 쓰기"], ["nostalgic daydream", "향수에 잠긴 몽상"], ["insomnia", "잠 못 드는 밤"], ["empty apartment", "텅 빈 방"], ["street light glow", "가로등 불빛"], ["quiet reflection", "조용한 자기 성찰"], ["healing slowly", "천천히 치유되는"]]}, {"label": "🍻 파티 / 축제 / 신남", "tags": [["house party", "하우스 파티"], ["rooftop party", "옥상 파티"], ["festival crowd", "페스티벌 군중"], ["club night", "클럽 밤"], ["summer festival", "여름 축제"], ["friends gathering", "친구들과 모임"], ["celebration", "축하"], ["dance floor", "댄스 플로어"], ["karaoke night", "노래방"], ["late night bar", "심야 바"], ["pregame vibes", "파티 전 분위기 업"], ["after party", "파티 이후"]]}, {"label": "📚 일상 / 집에서", "tags": [["cozy home", "아늑한 집"], ["morning routine", "아침 루틴"], ["cooking dinner", "저녁 요리"], ["working from home", "재택근무"], ["lazy afternoon", "나른한 오후"], ["Sunday brunch", "일요일 브런치"], ["watching rain inside", "실내에서 빗소리 듣기"], ["plants and sunlight", "화분과 햇빛"], ["city apartment life", "도시 아파트 생활"], ["coffee and music", "커피와 음악"], ["warm blanket", "따뜻한 이불"], ["evening wind down", "저녁 휴식 루틴"]]}, {"label": "🏙️ 도시 / 밤거리", "tags": [["city at night", "밤의 도시"], ["neon lights", "네온 불빛"], ["empty subway", "텅 빈 지하철"], ["street food", "포장마차 골목"], ["downtown hustle", "다운타운 활기"], ["back alley", "골목길"], ["convenience store night", "심야 편의점"], ["crowd and noise", "군중과 소음"], ["urban loneliness", "도시 속 외로움"], ["skyscraper view", "빌딩 숲 전망"], ["taxi in the rain", "비 오는 날 택시"], ["foggy city street", "안개 낀 도시 거리"]]}, {"label": "💡 상황별 프롬프트 조합 예시", "info": true, "tags": [["night drive, synthwave, neon lights, late night mood, no vocals", "심야 드라이브 조합"], ["beach party, afrobeats, sun-drenched, summer heat, energetic", "해변 파티 조합"], ["couple walk, acoustic guitar, tender, gentle warmth, soft vocal", "연인 산책 조합"], ["alone at midnight, lo-fi hip-hop, rainy window, melancholic, Rhodes", "혼자 밤 감성 조합"], ["cozy home, bedroom pop, coffee and music, warm tone, intimate vocal", "집에서 아늑 조합"], ["city at night, dark R&B, neon lights, urban atmosphere, breathy vocal", "도시 야경 조합"], ["forest path, indie folk, fingerpicked guitar, peaceful nature, warm reverb", "숲길 산책 조합"]]}]}
+,
+  {"id": "band", "label": "🎸 밴드 음악", "color": "#d4906c", "desc": "밴드 사운드 질감, 서브장르, 편성, 완성 조합 — 록/펑크/메탈/재즈밴드 전반", "groups": [{"label": "💡 밴드 사운드 핵심 원칙", "info": true, "tags": [["full band sound", "풀밴드 사운드 — 기타+베이스+드럼+보컬 전부"], ["band recording", "밴드 녹음 느낌"], ["live room feel", "라이브 룸 느낌 (스튜디오 내 앙상블 녹음)"], ["tight band groove", "타이트한 밴드 그루브"], ["band interplay", "밴드 멤버 간 상호작용"], ["raw band energy", "날것의 밴드 에너지"]]}, {"label": "🎸 록 계열 서브장르", "tags": [["garage rock", "개러지 록 — 거칠고 날것의"], ["hard rock", "하드록 — 강하고 묵직한"], ["classic rock", "클래식 록 — 70~80년대 스타일"], ["punk rock", "펑크록 — 빠르고 반항적인"], ["grunge", "그런지 — 어둡고 찌그러진"], ["post-punk", "포스트 펑크 — 어둡고 뉴웨이브"], ["math rock", "매스록 — 복잡한 박자와 리프"], ["progressive rock", "프로그레시브 록 — 복잡한 편곡"], ["psychedelic rock", "사이키델릭 록 — 몽환적인 록"], ["surf rock", "서프록 — 경쾌하고 해변 느낌"], ["blues rock", "블루스록 — 슬라이드 기타+그루브"], ["southern rock", "서던록 — 미국 남부 느낌"], ["arena rock", "아레나 록 — 웅장하고 스타디움용"], ["emo", "이모 — 감성적이고 폭발적인"], ["shoegaze", "슈게이징 — 리버브 가득한 벽소리"], ["dream pop", "드림팝 — 몽환적인 팝록"]]}, {"label": "🤘 헤비 / 메탈 계열", "tags": [["heavy metal", "헤비메탈"], ["doom metal", "둠메탈 — 느리고 어두운"], ["stoner rock", "스토너록 — 두껍고 사이키델릭"], ["sludge metal", "슬러지 메탈 — 찌그러지고 무거운"], ["post-metal", "포스트메탈 — 웅장하고 무거운"], ["hardcore", "하드코어 — 빠르고 공격적인"], ["punk", "펑크 — 짧고 날카로운"], ["thrash metal", "스래시 메탈 — 빠르고 파워풀"], ["noise rock", "노이즈록 — 불협화음과 피드백"]]}, {"label": "🎷 밴드 편성 스타일", "tags": [["guitar bass drums", "기타+베이스+드럼 3인조 편성"], ["power trio", "파워 트리오 — 기타/베이스/드럼"], ["four piece band", "4인 밴드 — 기타/베이스/드럼/보컬"], ["guitar duo", "기타 듀오"], ["horn section added", "혼 섹션 추가된 밴드"], ["string section added", "스트링 섹션 추가"], ["jazz band", "재즈 밴드 편성"], ["big band", "빅밴드 — 대형 재즈 오케스트라"], ["acoustic band", "어쿠스틱 밴드"], ["folk band", "포크 밴드"], ["rock band", "록 밴드"], ["funk band", "펑크 밴드 — 리듬 중심"]]}, {"label": "🎚️ 밴드 프로덕션 질감", "tags": [["room mic drums", "룸 마이크 드럼 — 공간감 있는 드럼"], ["close mic drums", "클로즈 마이크 드럼 — 타이트한 드럼"], ["overdriven guitar", "오버드라이브 기타"], ["crunch guitar", "크런치 기타 — 적당히 찌그러진"], ["clean tone guitar", "클린 톤 기타"], ["fuzz guitar", "퍼즈 기타 — 두껍게 찌그러진"], ["wah guitar", "와와 기타"], ["chorus guitar", "코러스 이펙트 기타"], ["reverb soaked guitar", "리버브 가득한 기타"], ["tight rhythm section", "타이트한 리듬 섹션"], ["punchy bass", "펀치감 있는 베이스"], ["studio band recording", "스튜디오 밴드 녹음"], ["analog board mix", "아날로그 믹서 느낌"], ["dry room sound", "건조한 룸 사운드"], ["tape recorded", "테이프 녹음 느낌"], ["lo-fi band", "로파이 밴드 — 거칠고 빈티지한"]]}, {"label": "⚡ 밴드 에너지 & 분위기", "tags": [["anthemic", "앤섬 — 떼창하고 싶은 웅장한"], ["driving", "힘차게 밀어붙이는"], ["cathartic", "카타르시스 — 터지는 느낌"], ["raw and energetic", "날것의 에너지"], ["melancholic and heavy", "우울하고 무거운"], ["explosive chorus", "폭발적인 후렴"], ["quiet verse loud chorus", "조용한 절 폭발하는 후렴"], ["slow burn buildup", "서서히 타오르는 빌드업"], ["stadium rock energy", "스타디움 록 에너지"], ["intimate band sound", "친밀하고 작은 밴드 느낌"], ["garage band feel", "개러지 밴드 느낌"], ["tight and punchy", "타이트하고 펀치감 있는"]]}, {"label": "💡 밴드 음악 완성 프롬프트 예시", "info": true, "tags": [["garage rock, overdriven guitar, tight rhythm section, raw and energetic, dry room sound", "개러지록 완성 조합"], ["indie rock, clean tone guitar, jangly guitar, four piece band, melancholic, studio recording", "인디록 완성 조합"], ["hard rock, crunch guitar, punchy bass, room mic drums, anthemic, powerful vocal", "하드록 완성 조합"], ["post-punk, chorus guitar, bass driven, dark atmosphere, baritone, lo-fi band", "포스트펑크 완성 조합"], ["shoegaze, reverb soaked guitar, fuzz guitar, dreamy, layered vocals, wall of sound", "슈게이징 완성 조합"], ["blues rock, slide guitar, bass guitar, wah guitar, slow burn buildup, soulful vocal", "블루스록 완성 조합"], ["classic rock, guitar bass drums, arena rock energy, anthemic chorus, warm analog tape tone", "클래식록 완성 조합"], ["folk band, acoustic guitar, fingerpicked guitar, upright bass, cajon, warm vocal, intimate band sound", "포크밴드 완성 조합"], ["funk band, slap bass, rhythm guitar, horn section added, tight band groove, danceable", "펑크밴드 완성 조합"]]}]}
+];
+
+// ═══ GENRE RANDOM COMBO PROFILES ═══
+const GENRE_PROFILES = [
+  { id: 'ballad', emoji: '💔', label: '발라드', color: '#d4a0a0', genreTag: ['Korean ballad', '한국 발라드'],
+    pools: {
+      energy: [['slow burn', '서서히 타오르는'], ['melancholic', '우수에 찬'], ['mid-tempo', '중간 템포'], ['floating', '떠다니는'], ['tender', '부드럽고 섬세한'], ['wistful', '아련한']],
+      instrument: [['acoustic piano', '어쿠스틱 피아노'], ['soft strings', '부드러운 현악'], ['acoustic guitar', '어쿠스틱 기타'], ['Rhodes', '로즈 전자 피아노'], ['warm bass swells', '따뜻한 베이스 스웰'], ['string quartet', '현악 사중주']],
+      production: [['studio recording', '스튜디오 녹음'], ['warm reverb', '따뜻한 리버브'], ['clean production', '클린 프로덕션'], ['intimate space', '아늑한 공간'], ['dry and punchy', '건조하고 펀치감']],
+      vocal: [['emotive vocal', '감정적인 보컬'], ['dry vocal', '건조한 보컬'], ['heartfelt', '진심 어린'], ['soulful vocal', '감정이 깊게 담긴'], ['vulnerable', '솔직하고 취약한']],
+      groove: [['lyrical melody', '서정적 선율'], ['ascending melody', '상승하는 선율'], ['lush chords', '풍성한 코드'], ['sparse arrangement', '절제된 편곡']]
+    }
+  },
+  { id: 'kpop', emoji: '✨', label: 'K-pop/팝', color: '#a89fd8', genreTag: ['K-pop', '케이팝'],
+    pools: {
+      energy: [['upbeat', '경쾌한'], ['energetic', '에너지 넘치는'], ['uptempo', '빠른 템포'], ['euphoric', '황홀한'], ['driving', '힘차게 몰아치는']],
+      instrument: [['synth pad', '신스 패드'], ['synth lead', '신스 리드'], ['808 bass', '808 베이스'], ['electric guitar', '일렉 기타'], ['punchy kick', '펀치감 있는 킥'], ['arp synth', '아르페지오 신스']],
+      production: [['modern production', '모던 프로덕션'], ['polished', '세련된'], ['wide stereo', '와이드 스테레오'], ['radio-ready', '라디오용'], ['dense layers', '촘촘한 레이어']],
+      vocal: [['powerful', '강렬한'], ['layered vocals', '여러 트랙이 쌓인'], ['harmonies', '화음'], ['belting', '벨팅'], ['ad-libs', '애드립']],
+      groove: [['catchy hook', '중독성 있는 훅'], ['danceable', '춤추게 만드는'], ['syncopated', '당김음'], ['bouncy', '통통 튀는']]
+    }
+  },
+  { id: 'hiphop', emoji: '🎤', label: '힙합/붐뱁', color: '#c9c47e', genreTag: ['boom bap', '붐뱁'],
+    pools: {
+      energy: [['driving', '힘차게 몰아치는'], ['laid-back', '여유로운'], ['intense', '강렬한'], ['grooving', '그루브한'], ['mid-tempo', '중간 템포']],
+      instrument: [['boom bap drums', '붐뱁 드럼'], ['upright bass', '업라이트 베이스'], ['Rhodes', '로즈 전자 피아노'], ['vinyl crackle', '바이닐 크래클'], ['trap hi-hats', '트랩 하이햇'], ['808 bass', '808 베이스']],
+      production: [['lo-fi warmth', '로파이 따뜻함'], ['dusty samples', '먼지 낀 샘플'], ['tight mix', '타이트한 믹스'], ['analog warmth', '아날로그 따뜻함'], ['gritty', '거친']],
+      vocal: [['rap', '랩'], ['dry vocal', '건조한 보컬'], ['raw vocals', '날것의 보컬'], ['ad-libs', '애드립'], ['layered vocals', '여러 트랙이 쌓인']],
+      groove: [['swung rhythm', '스윙 리듬'], ['syncopated', '당김음'], ['pocket groove', '포켓 그루브'], ['heavy groove', '무거운 그루브']]
+    }
+  },
+  { id: 'rnb', emoji: '🌙', label: 'R&B/소울', color: '#f0a0c0', genreTag: ['neo soul', '네오소울'],
+    pools: {
+      energy: [['slow burn', '서서히 타오르는'], ['grooving', '그루브한'], ['languid', '나른한'], ['hypnotic', '최면적인'], ['mid-tempo', '중간 템포']],
+      instrument: [['Rhodes', '로즈 전자 피아노'], ['fretless bass', '프렛리스 베이스'], ['muted trumpet', '뮤트 트럼펫'], ['warm bass swells', '따뜻한 베이스 스웰'], ['light percussion', '가벼운 타악기'], ['sub bass', '서브 베이스']],
+      production: [['analog warmth', '아날로그 따뜻함'], ['tape saturation', '테이프 새추레이션'], ['intimate space', '아늑한 공간'], ['warm reverb', '따뜻한 리버브'], ['polished', '세련된']],
+      vocal: [['breathy', '숨결 섞인'], ['airy vocal', '공기감 느껴지는'], ['falsetto', '팔세토'], ['soulful vocal', '감정이 깊게 담긴'], ['sultry', '관능적인']],
+      groove: [['syncopated', '당김음'], ['laid-back groove', '여유로운 그루브'], ['lush chords', '풍성한 코드'], ['seventh chords', '세븐스 코드']]
+    }
+  },
+  { id: 'indiefolk', emoji: '🌿', label: '인디포크', color: '#8dc9a8', genreTag: ['indie folk', '인디 포크'],
+    pools: {
+      energy: [['laid-back', '여유로운'], ['mid-tempo', '중간 템포'], ['nostalgic', '향수 어린'], ['wistful', '아련한'], ['gentle warmth', '포근한 따뜻함']],
+      instrument: [['fingerpicked guitar', '핑거피킹 기타'], ['acoustic guitar', '어쿠스틱 기타'], ['upright bass', '업라이트 베이스'], ['banjo', '밴조'], ['mandolin', '만돌린'], ['ukulele', '우쿨렐레']],
+      production: [['organic production', '실제 연주 느낌'], ['room sound', '룸 사운드'], ['raw recording', '날것의 녹음'], ['warm reverb', '따뜻한 리버브'], ['sparse arrangement', '절제된 편곡']],
+      vocal: [['intimate vocal', '친밀한 보컬'], ['warm vocal', '따뜻한 보컬'], ['tender', '부드럽고 섬세한'], ['breathy', '숨결 섞인']],
+      groove: [['sparse melody', '절제된 멜로디'], ['flowing melodic line', '흐르는 선율'], ['finger snap groove', '손가락 스냅 미니멀 리듬']]
+    }
+  },
+  { id: 'jazz', emoji: '🎷', label: '재즈/보사노바', color: '#e8a87c', genreTag: ['bossa nova', '보사노바'],
+    pools: {
+      energy: [['laid-back', '여유로운'], ['grooving', '그루브한'], ['mid-tempo', '중간 템포'], ['dreamy', '몽환적인']],
+      instrument: [['upright bass', '업라이트 베이스'], ['acoustic piano', '어쿠스틱 피아노'], ['brushed drums', '브러시 드럼'], ['alto sax', '알토 색소폰'], ['nylon string guitar', '나일론 현 기타'], ['vibraphone', '비브라폰']],
+      production: [['room sound', '룸 사운드'], ['warm reverb', '따뜻한 리버브'], ['analog warmth', '아날로그 따뜻함'], ['dry and punchy', '건조하고 펀치감']],
+      vocal: [['crooning', '크루닝'], ['soft vocal', '부드러운 보컬'], ['intimate vocal', '친밀한 보컬'], ['breathy', '숨결 섞인']],
+      groove: [['swung rhythm', '스윙 리듬'], ['jazz chords', '재즈 코드'], ['shuffle feel', '셔플 느낌'], ['chromatic harmony', '반음계 화성']]
+    }
+  },
+  { id: 'rock', emoji: '🎸', label: '록/얼터너티브', color: '#d4906c', genreTag: ['indie rock', '인디록'],
+    pools: {
+      energy: [['driving', '힘차게 몰아치는'], ['intense', '강렬한'], ['relentless', '쉬지 않고 밀어붙이는'], ['urgent', '긴박한']],
+      instrument: [['distorted guitar', '디스토션 기타'], ['electric bass', '일렉 베이스'], ['acoustic drums', '어쿠스틱 드럼'], ['tight snare', '타이트한 스네어'], ['ambient guitar', '공간감 있는 기타']],
+      production: [['wide stereo', '와이드 스테레오'], ['tight mix', '타이트한 믹스'], ['organic production', '실제 연주 느낌'], ['gritty', '거친']],
+      vocal: [['powerful', '강렬한'], ['aggressive', '공격적인'], ['raw vocals', '날것의 보컬'], ['belting', '벨팅']],
+      groove: [['driving rhythm', '힘차게 몰아치는 리듬'], ['heavy groove', '무거운 그루브'], ['minor chords', '단조 코드']]
+    }
+  },
+  { id: 'electronic', emoji: '🌌', label: '신스팝/일렉트로닉', color: '#90c4a0', genreTag: ['synth-pop', '신스팝'],
+    pools: {
+      energy: [['pulsing', '박동치는'], ['hypnotic', '최면적인'], ['uptempo', '빠른 템포'], ['floating', '떠다니는']],
+      instrument: [['analog synth', '아날로그 신스'], ['arp synth', '아르페지오 신스'], ['pad synth', '패드 신스'], ['808 bass', '808 베이스'], ['vocoder', '보코더']],
+      production: [['wide stereo', '와이드 스테레오'], ['sidechained bass', '킥에 맞춰 펌핑되는 베이스'], ['polished', '세련된'], ['dense layers', '촘촘한 레이어']],
+      vocal: [['vocoder', '보코더'], ['airy vocal', '공기감 느껴지는'], ['layered vocals', '여러 트랙이 쌓인'], ['filtered vocals', '필터 보컬']],
+      groove: [['syncopated', '당김음'], ['danceable', '춤추게 만드는'], ['offbeat rhythm', '오프비트 리듬']]
+    }
+  },
+  { id: 'edm', emoji: '🔊', label: 'EDM/하우스', color: '#b0c4de', genreTag: ['deep house', '딥하우스'],
+    pools: {
+      energy: [['energetic', '에너지 넘치는'], ['driving', '힘차게 몰아치는'], ['euphoric', '황홀한'], ['intense', '강렬한']],
+      instrument: [['supersaw synth', 'EDM용 두껍고 화려한 신스'], ['sub bass', '서브 베이스'], ['punchy kick', '펀치감 있는 킥'], ['TR-909', '909 드럼머신'], ['arp synth', '아르페지오 신스']],
+      production: [['sidechained bass', '킥에 맞춰 펌핑되는 베이스'], ['wide stereo', '와이드 스테레오'], ['radio-ready', '라디오용'], ['dense layers', '촘촘한 레이어']],
+      vocal: [['vocoder', '보코더'], ['pitched vocal chops', '피치드 보컬 촙'], ['ad-libs', '애드립'], ['layered vocals', '여러 트랙이 쌓인']],
+      groove: [['four-on-the-floor', '하우스 킥 패턴'], ['danceable', '춤추게 만드는'], ['bouncy', '통통 튀는']]
+    }
+  },
+  { id: 'classical', emoji: '🎻', label: '클래식/시네마틱', color: '#c4a8d4', genreTag: ['cinematic', '시네마틱'],
+    pools: {
+      energy: [['epic atmosphere', '웅장한 느낌'], ['meditative', '명상적인'], ['brooding', '우울하게 침잠하는'], ['slow burn', '서서히 타오르는']],
+      instrument: [['orchestral strings', '오케스트라 현악'], ['string quartet', '현악 사중주'], ['piano solo', '피아노 독주'], ['harp', '하프'], ['pizzicato strings', '피치카토 현악']],
+      production: [['huge reverb', '매우 넓은 리버브'], ['dense layers', '촘촘한 레이어'], ['organic production', '실제 연주 느낌'], ['wide stereo', '와이드 스테레오']],
+      vocal: [['choir', '합창'], ['soprano', '소프라노'], ['airy vocal', '공기감 느껴지는'], ['soft vocal', '부드러운 보컬']],
+      groove: [['ascending melody', '상승하는 선율'], ['modal harmony', '모달 화성'], ['lush chords', '풍성한 코드']]
+    }
+  },
+  { id: 'world', emoji: '🌏', label: '한국전통/월드', color: '#b8c99a', genreTag: ['fusion gugak', '퓨전국악'],
+    pools: {
+      energy: [['nostalgic', '향수 어린'], ['rhythmic', '리드미컬한'], ['mid-tempo', '중간 템포']],
+      instrument: [['sitar', '시타르'], ['shamisen', '샤미센'], ['marimba', '마림바'], ['acoustic guitar', '어쿠스틱 기타'], ['congas', '콩가']],
+      production: [['room sound', '룸 사운드'], ['organic production', '실제 연주 느낌'], ['warm reverb', '따뜻한 리버브']],
+      vocal: [['raw vocals', '날것의 보컬'], ['soulful vocal', '감정이 깊게 담긴'], ['intimate vocal', '친밀한 보컬']],
+      groove: [['latin groove', '라틴 음악 특유 리듬'], ['syncopated', '당김음'], ['pentatonic', '펜타토닉']]
+    }
+  }
+];
+
+// 고정 기본값 (기본 규칙 탭과 동일) — 랜덤 조합에 항상 포함
+const BASE_DEFAULTS = [
+  ['studio recording', '스튜디오 녹음'],
+  ['close mic', '근거리 마이크'],
+  ['tight mix', '타이트한 믹스'],
+  ['dry vocal', '건조한 보컬'],
+  ['no reverb', '리버브 없음'],
+  ['clean production', '클린 프로덕션'],
+  ['no autotune', '오토튠 없음'],
+  ['no heavy effects', '과한 이펙트 없음']
+];
+const BASE_DEFAULT_ENS = BASE_DEFAULTS.map(function(t) { return t[0]; });
+function excludeDefaults(arr) { return arr.filter(function(t) { return BASE_DEFAULT_ENS.indexOf(t[0]) === -1; }); }
+
+// ═══ STATE ═══
+let activeTab = TABS[0].id;
+let customTags = {};
+let addingTo = null;
+let separator = ', ';
+let builderItems = [];
+let dragSrcIdx = null;
+let randomGenreId = GENRE_PROFILES[0].id;
+let randomCombo = null;
+let randomLocks = { energy: false, instrument: false, production: false, vocal: false, groove: false };
+let comboMode = 'single'; // 'single' | 'fusion' | 'fusionPick'
+let fusionPair = null; // [genreIdA, genreIdB] - 'fusion'(랜덤 페어)과 'fusionPick'(직접 선택 페어)가 공유
+let fusionPickIds = []; // fusionPick 모드에서 사용자가 직접 고른 장르 id (최대 2개)
+let includeDefaults = true; // 랜덤 조합에 고정 기본값(BASE_DEFAULTS)을 항상 끼워 넣을지 여부
+
+// ═══ UTILS ═══
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+// ═══ BUILDER ═══
+function isInBuilder(en) { return builderItems.some(i => i.en === en); }
+function toggleBuilder(en, ko) {
+  if (isInBuilder(en)) { builderItems = builderItems.filter(i => i.en !== en); }
+  else { builderItems.push({id: Date.now() + Math.random(), en, ko}); }
+  renderBuilder(); render();
+}
+function removeBuilderItem(id) { builderItems = builderItems.filter(i => i.id !== id); renderBuilder(); render(); }
+function clearAll() { builderItems = []; renderBuilder(); render(); }
+function setSep(s) {
+  separator = s;
+  document.querySelectorAll('.sep-btn').forEach(b => {
+    b.classList.toggle('active',
+      (s === ', ' && b.textContent === '쉼표') ||
+      (s === ' ' && b.textContent === '공백') ||
+      (s === '\n' && b.textContent === '줄바꿈'));
+  });
+  renderBuilder();
+}
+function copyAll() {
+  if (!builderItems.length) return;
+  const text = builderItems.map(i => i.en).join(separator);
+  navigator.clipboard.writeText(text).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+  });
+  showToast('✓ 복사 완료! (' + builderItems.length + '개)');
+}
+function renderBuilder() {
+  const container = document.getElementById('builder-tags');
+  const preview = document.getElementById('builder-preview');
+  const count = document.getElementById('builder-count');
+  const btnCopy = document.getElementById('btn-copy');
+  const btnClear = document.getElementById('btn-clear');
+  const n = builderItems.length;
+  btnCopy.disabled = n === 0; btnClear.disabled = n === 0;
+  count.textContent = n > 0 ? n + '개 키워드' : '';
+  if (n === 0) {
+    container.innerHTML = '<div class="builder-empty">태그를 클릭하면<br>여기 쌓여요<br><br>완성되면<br>전체 복사!</div>';
+    preview.textContent = '태그를 클릭하면 여기에 프롬프트가 만들어져요';
+    preview.classList.remove('has-content'); return;
+  }
+  container.innerHTML = builderItems.map((item, idx) =>
+    '<div class="builder-chip" draggable="true"' +
+    ' ondragstart="onDragStart(event,' + idx + ')"' +
+    ' ondragover="onDragOver(event,' + idx + ')"' +
+    ' ondrop="onDrop(event,' + idx + ')"' +
+    ' ondragend="onDragEnd()">' +
+    '<span class="builder-chip-drag" title="드래그로 순서 변경">⠿</span>' +
+    '<span class="chip-en">' + esc(item.en) + '</span>' +
+    '<span class="chip-ko">' + esc(item.ko) + '</span>' +
+    '<button class="builder-chip-remove" onclick="removeBuilderItem(' + item.id + ')" title="제거">×</button>' +
+    '</div>'
+  ).join('');
+  preview.textContent = builderItems.map(i => i.en).join(separator);
+  preview.classList.add('has-content');
+}
+function onDragStart(e, idx) { dragSrcIdx = idx; e.currentTarget.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
+function onDragOver(e, idx) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+function onDrop(e, idx) { e.preventDefault(); if (dragSrcIdx === null || dragSrcIdx === idx) return; const m = builderItems.splice(dragSrcIdx, 1)[0]; builderItems.splice(idx, 0, m); dragSrcIdx = null; renderBuilder(); }
+function onDragEnd() { document.querySelectorAll('.builder-chip').forEach(c => c.classList.remove('dragging')); dragSrcIdx = null; }
+
+// ═══ RANDOM COMBO ═══
+function shuffleArr(arr) {
+  const copy = arr.slice();
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = copy[i]; copy[i] = copy[j]; copy[j] = tmp;
+  }
+  return copy;
+}
+function pickOne(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function pickN(arr, n) { return shuffleArr(arr).slice(0, n); }
+function pickTwoFromPools(poolA, poolB) {
+  const a = pickOne(poolA);
+  const restB = poolB.filter(function(t) { return t[0] !== a[0]; });
+  const b = pickOne(restB.length ? restB : poolB);
+  return [a, b];
+}
+function currentProfile() { return GENRE_PROFILES.find(function(p) { return p.id === randomGenreId; }); }
+function fusionProfiles() {
+  return [GENRE_PROFILES.find(function(p) { return p.id === fusionPair[0]; }), GENRE_PROFILES.find(function(p) { return p.id === fusionPair[1]; })];
+}
+function fusionLabel() {
+  const ab = fusionProfiles();
+  return ab[0].emoji + ' ' + ab[0].label + '  ×  ' + ab[1].emoji + ' ' + ab[1].label;
+}
+function generateCombo(genreId, prev) {
+  const p = GENRE_PROFILES.find(function(g) { return g.id === genreId; });
+  prev = prev || {};
+  return {
+    genre: p.genreTag,
+    energy: (randomLocks.energy && prev.energy) ? prev.energy : pickOne(excludeDefaults(p.pools.energy)),
+    instruments: (randomLocks.instrument && prev.instruments) ? prev.instruments : pickN(excludeDefaults(p.pools.instrument), 2),
+    production: (randomLocks.production && prev.production) ? prev.production : pickOne(excludeDefaults(p.pools.production)),
+    vocal: (randomLocks.vocal && prev.vocal) ? prev.vocal : pickOne(excludeDefaults(p.pools.vocal)),
+    groove: (randomLocks.groove && prev.groove) ? prev.groove : pickOne(excludeDefaults(p.pools.groove))
+  };
+}
+function generateFusionCombo(prev, keepPair) {
+  if (!keepPair || !fusionPair) fusionPair = shuffleArr(GENRE_PROFILES.map(function(p) { return p.id; })).slice(0, 2);
+  const ab = fusionProfiles(); const A = ab[0]; const B = ab[1];
+  prev = prev || {};
+  return {
+    genre: [A.genreTag, B.genreTag],
+    energy: (randomLocks.energy && prev.energy) ? prev.energy : pickOne(excludeDefaults(A.pools.energy)),
+    instruments: (randomLocks.instrument && prev.instruments) ? prev.instruments : pickTwoFromPools(excludeDefaults(A.pools.instrument), excludeDefaults(B.pools.instrument)),
+    production: (randomLocks.production && prev.production) ? prev.production : pickOne(excludeDefaults(B.pools.production)),
+    vocal: (randomLocks.vocal && prev.vocal) ? prev.vocal : pickOne(excludeDefaults(A.pools.vocal)),
+    groove: (randomLocks.groove && prev.groove) ? prev.groove : pickOne(excludeDefaults(B.pools.groove))
+  };
+}
+function setComboMode(mode) {
+  comboMode = mode;
+  if (mode === 'fusion') {
+    randomCombo = generateFusionCombo(null, false);
+  } else if (mode === 'fusionPick') {
+    fusionPickIds = [];
+    randomCombo = null;
+  } else {
+    randomCombo = generateCombo(randomGenreId);
+  }
+  render();
+}
+function selectRandomGenre(id) { randomGenreId = id; comboMode = 'single'; randomCombo = generateCombo(id); render(); }
+function rerollFusionPair() { randomCombo = generateFusionCombo(randomCombo, false); render(); }
+// fusionPick 모드: 장르 칩을 최대 2개까지 직접 골라 그 조합으로 나머지 항목을 랜덤 생성한다.
+// 이미 2개가 선택된 상태에서 새 칩을 고르면 가장 먼저 골랐던 것을 밀어낸다(최근 2개 유지).
+function toggleFusionPickGenre(id) {
+  const idx = fusionPickIds.indexOf(id);
+  if (idx !== -1) {
+    fusionPickIds.splice(idx, 1);
+  } else {
+    fusionPickIds.push(id);
+    if (fusionPickIds.length > 2) fusionPickIds.shift();
+  }
+  if (fusionPickIds.length === 2) {
+    fusionPair = fusionPickIds.slice();
+    randomCombo = generateFusionCombo(null, true);
+  } else {
+    randomCombo = null;
+  }
+  render();
+}
+function shuffleAll() {
+  if (comboMode === 'fusion') {
+    randomCombo = generateFusionCombo(randomCombo, false);
+  } else if (comboMode === 'fusionPick') {
+    if (fusionPickIds.length < 2) return;
+    randomCombo = generateFusionCombo(randomCombo, true);
+  } else {
+    randomCombo = generateCombo(randomGenreId, randomCombo);
+  }
+  render();
+}
+function toggleLock(cat) { randomLocks[cat] = !randomLocks[cat]; render(); }
+function rerollCategory(cat) {
+  if (comboMode === 'fusion' || comboMode === 'fusionPick') {
+    const ab = fusionProfiles(); const A = ab[0]; const B = ab[1];
+    if (cat === 'energy') randomCombo.energy = pickOne(excludeDefaults(A.pools.energy));
+    else if (cat === 'instrument') randomCombo.instruments = pickTwoFromPools(excludeDefaults(A.pools.instrument), excludeDefaults(B.pools.instrument));
+    else if (cat === 'production') randomCombo.production = pickOne(excludeDefaults(B.pools.production));
+    else if (cat === 'vocal') randomCombo.vocal = pickOne(excludeDefaults(A.pools.vocal));
+    else if (cat === 'groove') randomCombo.groove = pickOne(excludeDefaults(B.pools.groove));
+  } else {
+    const p = currentProfile();
+    if (cat === 'energy') randomCombo.energy = pickOne(excludeDefaults(p.pools.energy));
+    else if (cat === 'instrument') randomCombo.instruments = pickN(excludeDefaults(p.pools.instrument), 2);
+    else if (cat === 'production') randomCombo.production = pickOne(excludeDefaults(p.pools.production));
+    else if (cat === 'vocal') randomCombo.vocal = pickOne(excludeDefaults(p.pools.vocal));
+    else if (cat === 'groove') randomCombo.groove = pickOne(excludeDefaults(p.pools.groove));
+  }
+  render();
+}
+function comboToItems() {
+  const c = randomCombo;
+  const genreItems = Array.isArray(c.genre[0]) ? c.genre : [c.genre];
+  const defaults = includeDefaults ? BASE_DEFAULTS : [];
+  return genreItems.concat([c.energy]).concat(c.instruments).concat([c.production, c.vocal, c.groove]).concat(defaults);
+}
+function toggleIncludeDefaults() { includeDefaults = !includeDefaults; render(); }
+function addComboToBuilder() {
+  comboToItems().forEach(function(t) {
+    if (!isInBuilder(t[0])) builderItems.push({ id: Date.now() + Math.random(), en: t[0], ko: t[1] });
+  });
+  renderBuilder(); render();
+  showToast('✓ 조합 전체를 빌더에 추가했어요');
+}
+function copyCombo() {
+  const text = comboToItems().map(function(t) { return t[0]; }).join(separator);
+  navigator.clipboard.writeText(text).catch(function() {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+  });
+  showToast('✓ 조합 복사 완료!');
+}
+function renderRandomTab(tab) {
+  if (comboMode === 'fusion' && !fusionPair) randomCombo = generateFusionCombo(null, false);
+  if (comboMode === 'single' && !randomCombo) randomCombo = generateCombo(randomGenreId);
+
+  const isFusionLike = comboMode === 'fusion' || comboMode === 'fusionPick';
+  const rowColor = isFusionLike ? (randomCombo ? fusionProfiles()[0].color : '#c8a97e') : currentProfile().color;
+
+  const modeToggle = '<div class="mode-toggle">' +
+    '<button class="mode-btn' + (comboMode === 'single' ? ' active' : '') + '" onclick="setComboMode(\'single\')">🎯 장르 선택</button>' +
+    '<button class="mode-btn' + (comboMode === 'fusion' ? ' active' : '') + '" onclick="setComboMode(\'fusion\')">🔀 랜덤 믹스 (2개 장르 퓨전)</button>' +
+    '<button class="mode-btn' + (comboMode === 'fusionPick' ? ' active' : '') + '" onclick="setComboMode(\'fusionPick\')">🎨 장르 2개 직접 선택</button>' +
+    '</div>';
+  const genreChips = GENRE_PROFILES.map(function(p) {
+    const active = comboMode === 'single' && p.id === randomGenreId;
+    return '<button class="genre-chip' + (active ? ' active' : '') + '"' +
+      ' style="' + (active ? 'background:' + p.color + ';border-color:' + p.color + ';' : '') + '"' +
+      ' onclick="selectRandomGenre(\'' + p.id + '\')">' + esc(p.emoji + ' ' + p.label) + '</button>';
+  }).join('');
+  const fusionPickChips = GENRE_PROFILES.map(function(p) {
+    const active = fusionPickIds.indexOf(p.id) !== -1;
+    return '<button class="genre-chip' + (active ? ' active' : '') + '"' +
+      ' style="' + (active ? 'background:' + p.color + ';border-color:' + p.color + ';' : '') + '"' +
+      ' onclick="toggleFusionPickGenre(\'' + p.id + '\')">' + esc(p.emoji + ' ' + p.label) + '</button>';
+  }).join('');
+  let selectorHtml;
+  if (comboMode === 'fusion') {
+    selectorHtml = '<div class="fusion-info">🔀 ' + esc(fusionLabel()) +
+      '<button class="fusion-reroll-btn" onclick="rerollFusionPair()" title="다른 장르 조합 뽑기">🎲 다른 조합</button></div>';
+  } else if (comboMode === 'fusionPick') {
+    selectorHtml = '<p class="tab-desc" style="margin:-4px 0 10px;">장르를 2개 선택하세요 (' + fusionPickIds.length + '/2 선택됨)</p>' +
+      '<div class="genre-picker">' + fusionPickChips + '</div>';
+  } else {
+    selectorHtml = '<div class="genre-picker">' + genreChips + '</div>';
+  }
+
+  if (comboMode === 'fusionPick' && !randomCombo) {
+    return '<p class="tab-desc">' + esc(tab.desc) + '</p>' + modeToggle + selectorHtml;
+  }
+
+  const shuffleLabel = comboMode === 'single' ? '🎲 랜덤 조합 생성' : '🎲 새로운 퓨전 조합 생성';
+  function catRow(catKey, label, items, lockable) {
+    const btns = lockable ?
+      '<div class="combo-cat-btns">' +
+      '<button class="combo-icon-btn' + (randomLocks[catKey] ? ' locked' : '') + '" onclick="toggleLock(\'' + catKey + '\')" title="고정/해제">' + (randomLocks[catKey] ? '🔒' : '🔓') + '</button>' +
+      '<button class="combo-icon-btn" onclick="rerollCategory(\'' + catKey + '\')" title="다시 뽑기">🎲</button>' +
+      '</div>' : '';
+    const tagsHtml = items.map(function(t) { return renderTag(t[0], t[1], { tabColor: rowColor }); }).join('');
+    return '<div class="combo-category">' +
+      '<div class="combo-cat-header"><span class="combo-cat-label">' + esc(label) + '</span>' + btns + '</div>' +
+      '<div class="tag-list">' + tagsHtml + '</div></div>';
+  }
+  const genreRowItems = isFusionLike ? randomCombo.genre : [randomCombo.genre];
+  const genreRowLabel = isFusionLike ? '장르 · 퓨전' : '장르';
+  const defaultsToggle = '<label class="defaults-toggle">' +
+    '<input type="checkbox"' + (includeDefaults ? ' checked' : '') + ' onchange="toggleIncludeDefaults()">' +
+    '고정 기본값(스튜디오 녹음, 노 리버브 등) 항상 포함' +
+    '</label>';
+  const defaultsRow = includeDefaults ? catRow('defaults', '기본값 · 항상 포함', BASE_DEFAULTS, false) : '';
+  return '<p class="tab-desc">' + esc(tab.desc) + '</p>' +
+    modeToggle + selectorHtml + defaultsToggle +
+    '<button id="shuffle-btn" onclick="shuffleAll()">' + shuffleLabel + '</button>' +
+    catRow('genre', genreRowLabel, genreRowItems, false) +
+    defaultsRow +
+    catRow('energy', '에너지 / 템포', [randomCombo.energy], true) +
+    catRow('instrument', '악기', randomCombo.instruments, true) +
+    catRow('production', '프로덕션', [randomCombo.production], true) +
+    catRow('vocal', '보컬', [randomCombo.vocal], true) +
+    catRow('groove', '멜로디 / 그루브', [randomCombo.groove], true) +
+    '<div class="combo-actions">' +
+    '<button class="btn-combo-add" onclick="addComboToBuilder()">＋ 전체 빌더에 추가</button>' +
+    '<button class="btn-combo-copy" onclick="copyCombo()">조합 복사</button>' +
+    '</div>';
+}
+
+// ═══ RENDER ═══
+function renderTabBar(search) {
+  const bar = document.getElementById('tab-bar');
+  if (search) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  bar.innerHTML = TABS.map(t =>
+    '<button class="tab-btn' + (t.id === activeTab ? ' active' : '') + '"' +
+    ' style="' + (t.id === activeTab ? 'background:' + t.color + ';' : '') + '"' +
+    ' onclick="switchTab(\'' + t.id + '\')">' + esc(t.label) + '</button>'
+  ).join('');
+}
+function renderTag(en, ko, opts) {
+  const danger = opts.danger; const info = opts.info; const tabColor = opts.tabColor;
+  const badge = opts.badge; const isCustom = opts.isCustom; const customKey = opts.customKey;
+  const sel = isInBuilder(en);
+  let bg = '#1a1a1a', col = '#bbb', border = '#252525';
+  if (danger) { bg = '#1e1212'; col = '#d07777'; border = '#3a1818'; }
+  else if (info) { bg = '#101820'; col = '#88b8d0'; border = '#1a3040'; }
+  const selMark = sel ? ' ✓' : '';
+  const classes = ['tag-main', danger ? 'danger' : '', info ? 'info' : '', isCustom ? 'custom' : '', sel ? 'selected' : ''].filter(Boolean).join(' ');
+  const badgeHtml = badge ? '<span class="search-badge">' + esc(badge) + '</span>' : '';
+  const deleteBtn = (isCustom && customKey) ?
+    '<button class="tag-delete-btn" onclick="event.stopPropagation();deleteCustomTag(\'' + esc(customKey) + '\',\'' + esc(en) + '\')" title="삭제">×</button>' : '';
+  const enColor = sel ? 'var(--accent)' : col;
+  return '<span class="tag-wrap">' +
+    '<button class="' + classes + '" style="background:' + bg + ';border-color:' + border + ';" onclick="toggleBuilder(\'' + esc(en) + '\',\'' + esc(ko) + '\')" title="' + (sel ? '빌더에서 제거' : '빌더에 추가') + '">' +
+    '<span class="tag-en" style="color:' + enColor + ';">' + esc(en) + selMark + badgeHtml + '</span>' +
+    '</button>' +
+    '<span class="tag-ko">' + esc(ko) + '</span>' +
+    deleteBtn + '</span>';
+}
+function renderGroup(g, tabId, tabColor) {
+  const key = tabId + '__' + g.label;
+  const extras = customTags[key] || [];
+  const allTags = g.tags.concat(extras);
+  const labelCol = g.danger ? '#d07777' : g.info ? '#88b8d0' : tabColor;
+  const noteHtml = g.note ? '<span class="group-note">' + esc(g.note) + '</span>' : '';
+  const addFormHtml = (addingTo === key) ?
+    '<div class="add-form"><input class="add-input" id="add-input-' + CSS.escape(key) + '" type="text" placeholder="태그 입력 후 Enter"' +
+    ' onkeydown="if(event.key===\'Enter\') addCustomTag(\'' + esc(key) + '\',\'' + esc(tabColor) + '\')">' +
+    '<button class="add-submit" style="background:' + tabColor + ';" onclick="addCustomTag(\'' + esc(key) + '\',\'' + esc(tabColor) + '\')">추가</button></div>' : '';
+  const tagsHtml = allTags.map(function(t) {
+    const en = t[0], ko = t[1];
+    const isCust = extras.some(function(e) { return e[0] === en; });
+    return renderTag(en, ko, {danger: g.danger, info: g.info, tabColor, badge: null, isCustom: isCust, customKey: isCust ? key : null});
+  }).join('');
+  return '<div class="group">' +
+    '<div class="group-header"><span class="group-label" style="color:' + labelCol + ';">' + esc(g.label) + '</span>' + noteHtml +
+    '<div class="group-divider"></div>' +
+    '<button class="group-add-btn" onclick="toggleAdd(\'' + esc(key) + '\')" title="태그 추가">+</button></div>' +
+    '<div class="tag-list">' + tagsHtml + '</div>' + addFormHtml + '</div>';
+}
+function renderTabContent(tab) {
+  if (tab.id === 'random') return renderRandomTab(tab);
+  return '<p class="tab-desc">' + esc(tab.desc) + '</p>' +
+    tab.groups.map(function(g) { return renderGroup(g, tab.id, tab.color); }).join('');
+}
+function renderSearchResults(query) {
+  const q = query.toLowerCase();
+  const results = [];
+  TABS.forEach(function(tb) {
+    tb.groups.forEach(function(g) {
+      g.tags.forEach(function(t) {
+        if (t[0].toLowerCase().includes(q) || t[1].toLowerCase().includes(q)) {
+          results.push({tb, g, en: t[0], ko: t[1]});
+        }
+      });
+    });
+  });
+  if (!results.length) return '<p class="no-results">결과 없음</p>';
+  return '<div class="search-count">' + results.length + '개 결과</div><div class="tag-list">' +
+    results.map(function(r) {
+      return renderTag(r.en, r.ko, {danger: r.g.danger, info: r.g.info, tabColor: r.tb.color,
+        badge: r.tb.label.slice(0, 2) + ' ' + r.g.label, isCustom: false, customKey: null});
+    }).join('') + '</div>';
+}
+function render() {
+  const query = document.getElementById('search-input').value.trim();
+  renderTabBar(query);
+  const content = document.getElementById('content');
+  if (query) {
+    content.innerHTML = renderSearchResults(query);
+  } else {
+    const tab = TABS.find(function(t) { return t.id === activeTab; });
+    content.innerHTML = renderTabContent(tab);
+    if (addingTo) {
+      const inp = document.getElementById('add-input-' + CSS.escape(addingTo));
+      if (inp) inp.focus();
+    }
+  }
+}
+
+// ═══ ACTIONS ═══
+function switchTab(id) { activeTab = id; addingTo = null; render(); }
+function toggleAdd(key) { addingTo = (addingTo === key) ? null : key; render(); }
+function deleteCustomTag(key, en) {
+  customTags[key] = (customTags[key] || []).filter(function(t) { return t[0] !== en; });
+  render();
+}
+function addCustomTag(key, tabColor) {
+  const inp = document.getElementById('add-input-' + CSS.escape(key));
+  if (!inp || !inp.value.trim()) return;
+  customTags[key] = (customTags[key] || []).concat([[inp.value.trim(), '커스텀']]);
+  addingTo = null; render();
+}
+
+// ═══ INIT ═══
+document.getElementById('search-input').addEventListener('input', render);
+render();
+renderBuilder();
+</script>
+</body>
+</html>

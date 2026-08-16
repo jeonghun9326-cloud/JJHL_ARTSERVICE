@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>커뮤니티 — JJHL</title>
+  <script>
+    (function () {
+      var t = localStorage.getItem('jjhl-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="container">
+      <a href="index.html" class="logo">JJHL</a>
+      <nav class="nav">
+        <a href="index.html" class="nav-link">홈</a>
+        <a href="music.html" class="nav-link">음악</a>
+        <a href="community.html" class="nav-link active">커뮤니티</a>
+      </nav>
+      <div class="auth-area" id="authArea"></div>
+      <button class="theme-toggle" id="themeToggle" aria-label="테마 변경"></button>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <div class="page-hero">
+        <h1>커뮤니티</h1>
+        <p>글은 누구나 볼 수 있고, 글쓰기와 댓글은 로그인 후 이용할 수 있습니다</p>
+      </div>
+
+      <!-- 목록 화면 -->
+      <div id="listView">
+        <div class="board-toolbar">
+          <div class="search-result-count" id="postCount"></div>
+          <button class="btn-primary" id="newPostBtn" type="button">+ 새 글쓰기</button>
+        </div>
+        <div class="post-list" id="postList"></div>
+      </div>
+
+      <!-- 글쓰기 화면 -->
+      <div id="writeView" style="display:none">
+        <button class="btn-secondary" id="cancelWriteBtn" type="button" style="margin-bottom:20px">&#8592; 목록으로</button>
+        <div class="form-field">
+          <label for="postTitleInput">제목</label>
+          <input class="form-input" id="postTitleInput" type="text" maxlength="200" placeholder="제목을 입력하세요">
+        </div>
+        <div class="form-field">
+          <label for="postBodyInput">내용</label>
+          <textarea class="form-textarea" id="postBodyInput" maxlength="5000" placeholder="내용을 입력하세요"></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn-primary" id="submitPostBtn" type="button">등록하기</button>
+        </div>
+      </div>
+
+      <!-- 상세 화면 -->
+      <div id="detailView" style="display:none">
+        <button class="btn-secondary" id="backToListBtn" type="button" style="margin-bottom:20px">&#8592; 목록으로</button>
+        <div class="post-detail" id="postDetail"></div>
+        <div class="comment-section-title" id="commentSectionTitle">댓글</div>
+        <div class="comment-list" id="commentList"></div>
+        <div id="commentFormWrap"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 JJHL. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/community.js"></script>
+</body>
+</html>

@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SUNO 프롬프트 키워드 라이브러리</title>
+<style>
+:root{--bg:#0c0c18;--bg2:#12122a;--card:#0e0e22;--border:#252545;--purple:#c77dff;--teal:#1de9b6;--orange:#ff6b35;--blue:#4fc3f7;--text:#e0e0f0;--muted:#7070a0;}
+body.light{--bg:#f0f0ff;--bg2:#e8e8fc;--card:#f8f8ff;--border:#c0c0e0;--purple:#7030b0;--teal:#007060;--orange:#cc4400;--blue:#0070b0;--text:#18182e;--muted:#5050a0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;transition:background .3s,color .3s;}
+header{background:linear-gradient(135deg,#1a0a30,#0a1a30);padding:14px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+body.light header{background:linear-gradient(135deg,#e0d0ff,#d0e0ff);}
+header h1{font-size:1.2rem;font-weight:700;background:linear-gradient(90deg,var(--purple),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+header p{font-size:.7rem;color:var(--muted);margin-top:2px;}
+.theme-btn{background:rgba(255,255,255,.1);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:1rem;transition:all .2s;flex-shrink:0;}
+.theme-btn:hover{background:rgba(255,255,255,.2);}
+body.light .theme-btn{background:rgba(0,0,0,.06);}
+.tabs{position:sticky;top:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{padding:9px 14px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;font-size:.78rem;white-space:nowrap;transition:all .2s;}
+.tab:hover{color:var(--text);background:rgba(199,125,255,.05);}
+.tab.active{color:var(--purple);border-bottom-color:var(--purple);}
+.content{padding:18px 22px 210px;}
+.pane{display:none;}
+.pane.active{display:block;}
+.section{margin-bottom:22px;}
+.slabel{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:9px;padding-bottom:4px;border-bottom:1px solid var(--border);}
+/* ── CHIPS ── */
+.chips{display:flex;flex-wrap:wrap;gap:7px;}
+.chip{display:inline-flex;flex-direction:column;align-items:center;padding:5px 11px;border-radius:9px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;transition:all .15s;user-select:none;text-align:center;min-width:52px;}
+.chip:hover{border-color:var(--purple);background:rgba(199,125,255,.1);transform:translateY(-1px);}
+.chip.on{border-color:var(--teal);background:rgba(29,233,182,.12);}
+.chip.on .chip-en{color:var(--teal);}
+.chip.on .chip-ko{color:var(--teal);opacity:.8;}
+.chip-en{font-size:.76rem;font-weight:500;}
+.chip-ko{font-size:.59rem;color:var(--muted);margin-top:1px;}
+/* type=good (권장) */
+.chip.good{border-color:#2a5a2a;background:rgba(42,160,42,.09);}
+.chip.good .chip-en{color:#7ec87e;}
+.chip.good .chip-ko{color:#4a8a4a;}
+.chip.good:hover{border-color:#4ac04a;background:rgba(42,160,42,.18);}
+.chip.good.on{border-color:var(--teal);background:rgba(29,233,182,.15);}
+/* type=danger (금지) */
+.chip.danger{border-color:#5a1a1a;background:rgba(160,40,40,.08);cursor:default;}
+.chip.danger .chip-en{color:#e07070;}
+.chip.danger .chip-ko{color:#a04040;}
+.chip.danger:hover{border-color:#c04040;background:rgba(160,40,40,.15);transform:none;}
+/* type=info (참고) */
+.chip.info{border-color:#1a3a5a;background:rgba(40,100,180,.09);cursor:default;border-style:dashed;}
+.chip.info .chip-en{color:#78aadd;font-size:.7rem;}
+.chip.info .chip-ko{color:#4a7aaa;}
+.chip.info:hover{transform:none;}
+/* ── PRESET CARDS ── */
+.preset-filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px;}
+.preset-filter{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;font-size:.76rem;transition:all .2s;white-space:nowrap;}
+.preset-filter:hover{border-color:var(--purple);color:var(--text);}
+.preset-filter.active{background:var(--purple);color:#fff;border-color:var(--purple);}
+body.light .preset-filter.active{color:#000;}
+.preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:10px;}
+.preset-card{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:13px 14px;cursor:pointer;transition:all .15s;position:relative;}
+.preset-card:hover{border-color:var(--teal);transform:translateY(-1px);box-shadow:0 4px 14px rgba(29,233,182,.1);}
+.preset-card.copied{border-color:var(--teal);background:rgba(29,233,182,.07);}
+.preset-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;}
+.preset-badge{display:inline-block;padding:2px 9px;border-radius:5px;background:rgba(199,125,255,.13);color:var(--purple);font-size:.65rem;font-weight:700;}
+.preset-add-btn{padding:2px 8px;border-radius:5px;border:1px solid var(--border);background:none;color:var(--muted);font-size:.62rem;cursor:pointer;transition:all .15s;flex-shrink:0;margin-left:6px;}
+.preset-add-btn:hover{border-color:var(--purple);color:var(--purple);background:rgba(199,125,255,.1);}
+.preset-prompt{font-family:'Consolas',monospace;font-size:.71rem;color:var(--teal);line-height:1.55;margin-bottom:6px;word-break:break-all;}
+.preset-desc{font-size:.68rem;color:var(--muted);}
+.preset-copy-hint{font-size:.61rem;color:var(--teal);margin-top:5px;opacity:0;transition:opacity .15s;}
+.preset-card:hover .preset-copy-hint{opacity:1;}
+/* ── INFO BOX ── */
+.info{background:rgba(199,125,255,.07);border:1px solid rgba(199,125,255,.2);border-radius:8px;padding:11px 14px;font-size:.76rem;color:var(--muted);margin-bottom:16px;line-height:1.7;}
+.info strong{color:var(--purple);}
+.info-good{background:rgba(42,160,42,.07);border:1px solid rgba(42,160,42,.25);}
+.info-good strong{color:#7ec87e;}
+.info-danger{background:rgba(160,40,40,.07);border:1px solid rgba(160,40,40,.25);}
+.info-danger strong{color:#e07070;}
+/* ── CHORD TABLE ── */
+.chord-wrap{overflow-x:auto;margin-bottom:18px;}
+.ctable{width:100%;border-collapse:collapse;font-size:.75rem;min-width:580px;}
+.ctable th{background:var(--bg2);border:1px solid var(--border);padding:6px 9px;text-align:center;font-size:.65rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+.ctable td{border:1px solid var(--border);padding:6px 9px;text-align:center;}
+.ctable tbody tr{cursor:pointer;}
+.ctable tbody tr:hover td{background:rgba(199,125,255,.05);}
+.ctable tbody tr.chord-on td{background:rgba(29,233,182,.08);}
+.ctable .k{color:var(--purple);font-weight:700;text-align:left;}
+.ctable .maj{color:var(--teal);}
+.ctable .min{color:var(--blue);}
+.ctable .dim{color:var(--orange);}
+/* ── PROGRESSION ── */
+.prog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:9px;}
+.prog-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:11px 13px;cursor:pointer;transition:all .15s;}
+.prog-card:hover{border-color:var(--purple);transform:translateY(-1px);}
+.prog-card.on{border-color:var(--teal);background:rgba(29,233,182,.08);}
+.prog-name{font-size:.7rem;color:var(--muted);margin-bottom:3px;}
+.prog-chords{font-family:'Consolas',monospace;color:var(--teal);font-size:.88rem;letter-spacing:1px;}
+.prog-desc{font-size:.69rem;color:var(--muted);margin-top:4px;}
+/* ── LYRICS ── */
+.lyric-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:13px 15px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;}
+.lyric-card:hover{border-color:var(--teal);}
+.lyric-title{font-size:.73rem;font-weight:600;color:var(--teal);margin-bottom:9px;display:flex;justify-content:space-between;align-items:center;}
+.lyric-title span{font-size:.66rem;color:var(--muted);font-weight:400;}
+.lyric-body{font-family:'Consolas',monospace;font-size:.74rem;color:var(--muted);white-space:pre-wrap;line-height:1.9;}
+.tag-ref{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.tag-chip{padding:4px 11px;border-radius:5px;background:rgba(199,125,255,.12);border:1px solid rgba(199,125,255,.3);color:var(--purple);font-family:'Consolas',monospace;font-size:.75rem;cursor:pointer;transition:all .15s;}
+.tag-chip:hover{background:rgba(199,125,255,.25);}
+.dir-chip{padding:4px 11px;border-radius:5px;background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.3);color:var(--orange);font-family:'Consolas',monospace;font-size:.75rem;cursor:pointer;transition:all .15s;}
+.dir-chip:hover{background:rgba(255,107,53,.2);}
+.energy-chip{padding:4px 11px;border-radius:5px;background:rgba(29,233,182,.1);border:1px solid rgba(29,233,182,.3);color:var(--teal);font-family:'Consolas',monospace;font-size:.75rem;cursor:pointer;transition:all .15s;}
+.energy-chip:hover{background:rgba(29,233,182,.2);}
+.inst-chip{padding:4px 11px;border-radius:5px;background:rgba(79,195,247,.1);border:1px solid rgba(79,195,247,.3);color:var(--blue);font-family:'Consolas',monospace;font-size:.75rem;cursor:pointer;transition:all .15s;}
+.inst-chip:hover{background:rgba(79,195,247,.2);}
+/* ── BUILDER ── */
+#builder{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);padding:9px 22px 13px;z-index:200;box-shadow:0 -10px 40px rgba(0,0,0,.5);}
+.brow{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.blabel{font-size:.65rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);}
+.bbtns{display:flex;gap:6px;}
+.btn{padding:4px 13px;border-radius:6px;border:none;cursor:pointer;font-size:.74rem;transition:all .15s;}
+.btn-copy{background:linear-gradient(135deg,var(--purple),var(--teal));color:#000;font-weight:700;}
+.btn-copy:hover{opacity:.85;}
+.btn-clear{background:var(--card);color:var(--muted);border:1px solid var(--border);}
+.btn-clear:hover{color:var(--orange);border-color:var(--orange);}
+#output{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 11px;font-family:'Consolas',monospace;font-size:.78rem;color:var(--teal);min-height:32px;line-height:1.5;word-break:break-all;}
+#output.empty{color:var(--muted);font-family:'Segoe UI',sans-serif;font-style:italic;font-size:.76rem;}
+#toast{position:fixed;top:68px;right:22px;background:var(--teal);color:#000;font-weight:700;font-size:.76rem;padding:6px 14px;border-radius:6px;z-index:9999;opacity:0;transform:translateY(-8px);transition:all .25s;pointer-events:none;}
+#toast.show{opacity:1;transform:translateY(0);}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🎵 SUNO 프롬프트 키워드 라이브러리</h1>
+    <p>키워드 클릭 → 하단 빌더에 추가 · 초록색 = 권장 · 빨간색 = 사용금지(참고용) · 가사 태그 클릭 → 복사</p>
+  </div>
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="다크/라이트 모드">☀️</button>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-p="genres">🎸 개별 장르</button>
+  <button class="tab" data-p="combos">🎭 장르 조합</button>
+  <button class="tab" data-p="vocals">🎤 보컬 스타일</button>
+  <button class="tab" data-p="seasons">🌸 계절 / 날씨</button>
+  <button class="tab" data-p="tempo">⚡ 템포 / 그루브</button>
+  <button class="tab" data-p="harmony">🎼 음정 / 화성</button>
+  <button class="tab" data-p="situations">📍 상황 키워드</button>
+  <button class="tab" data-p="lyrics">📝 가사 필드</button>
+  <button class="tab" data-p="rules">🎯 기본 규칙</button>
+  <button class="tab" data-p="instruments">🎛️ 악기 심화</button>
+  <button class="tab" data-p="production">🎚️ 프로덕션 심화</button>
+  <button class="tab" data-p="vibes">🎬 장면 분위기</button>
+  <button class="tab" data-p="presets">🎵 주제별 조합</button>
+</div>
+
+<div class="content">
+  <!-- data-driven panes -->
+  <div class="pane active" id="pane-genres"></div>
+  <div class="pane" id="pane-combos">
+    <div class="info"><strong>사용법:</strong> 두 장르를 조합한 키워드입니다. 개별 장르 탭의 키워드와 함께 사용하거나 단독으로 입력하세요.</div>
+  </div>
+  <div class="pane" id="pane-vocals"></div>
+  <div class="pane" id="pane-seasons"></div>
+  <div class="pane" id="pane-tempo"></div>
+
+  <!-- 음정/화성 — 테이블 포함 정적 HTML -->
+  <div class="pane" id="pane-harmony">
+    <div class="info"><strong>사용법:</strong> 표의 행을 클릭하면 <em>key of X major/minor</em>가 프롬프트에 추가됩니다. 코드 진행 카드도 클릭하면 추가됩니다.</div>
+    <div class="section">
+      <div class="slabel">🎹 장조 다이아토닉 코드 (Major)</div>
+      <div class="chord-wrap">
+        <table class="ctable">
+          <thead><tr><th>조성</th><th>I (장)</th><th>ii (단)</th><th>iii (단)</th><th>IV (장)</th><th>V (장)</th><th>vi (단)</th><th>vii° (감)</th></tr></thead>
+          <tbody>
+            <tr data-key="C major"><td class="k">C Major · C장조</td><td class="maj">C</td><td class="min">Dm</td><td class="min">Em</td><td class="maj">F</td><td class="maj">G</td><td class="min">Am</td><td class="dim">Bdim</td></tr>
+            <tr data-key="G major"><td class="k">G Major · G장조</td><td class="maj">G</td><td class="min">Am</td><td class="min">Bm</td><td class="maj">C</td><td class="maj">D</td><td class="min">Em</td><td class="dim">F#dim</td></tr>
+            <tr data-key="D major"><td class="k">D Major · D장조</td><td class="maj">D</td><td class="min">Em</td><td class="min">F#m</td><td class="maj">G</td><td class="maj">A</td><td class="min">Bm</td><td class="dim">C#dim</td></tr>
+            <tr data-key="A major"><td class="k">A Major · A장조</td><td class="maj">A</td><td class="min">Bm</td><td class="min">C#m</td><td class="maj">D</td><td class="maj">E</td><td class="min">F#m</td><td class="dim">G#dim</td></tr>
+            <tr data-key="E major"><td class="k">E Major · E장조</td><td class="maj">E</td><td class="min">F#m</td><td class="min">G#m</td><td class="maj">A</td><td class="maj">B</td><td class="min">C#m</td><td class="dim">D#dim</td></tr>
+            <tr data-key="B major"><td class="k">B Major · B장조</td><td class="maj">B</td><td class="min">C#m</td><td class="min">D#m</td><td class="maj">E</td><td class="maj">F#</td><td class="min">G#m</td><td class="dim">A#dim</td></tr>
+            <tr data-key="F major"><td class="k">F Major · F장조</td><td class="maj">F</td><td class="min">Gm</td><td class="min">Am</td><td class="maj">Bb</td><td class="maj">C</td><td class="min">Dm</td><td class="dim">Edim</td></tr>
+            <tr data-key="Bb major"><td class="k">Bb Major · Bb장조</td><td class="maj">Bb</td><td class="min">Cm</td><td class="min">Dm</td><td class="maj">Eb</td><td class="maj">F</td><td class="min">Gm</td><td class="dim">Adim</td></tr>
+            <tr data-key="Eb major"><td class="k">Eb Major · Eb장조</td><td class="maj">Eb</td><td class="min">Fm</td><td class="min">Gm</td><td class="maj">Ab</td><td class="maj">Bb</td><td class="min">Cm</td><td class="dim">Ddim</td></tr>
+            <tr data-key="Ab major"><td class="k">Ab Major · Ab장조</td><td class="maj">Ab</td><td class="min">Bbm</td><td class="min">Cm</td><td class="maj">Db</td><td class="maj">Eb</td><td class="min">Fm</td><td class="dim">Gdim</td></tr>
+            <tr data-key="F# major"><td class="k">F# Major · F#장조</td><td class="maj">F#</td><td class="min">G#m</td><td class="min">A#m</td><td class="maj">B</td><td class="maj">C#</td><td class="min">D#m</td><td class="dim">E#dim</td></tr>
+            <tr data-key="Db major"><td class="k">Db Major · Db장조</td><td class="maj">Db</td><td class="min">Ebm</td><td class="min">Fm</td><td class="maj">Gb</td><td class="maj">Ab</td><td class="min">Bbm</td><td class="dim">Cdim</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="section">
+      <div class="slabel">🎸 단조 다이아토닉 코드 (Natural Minor)</div>
+      <div class="chord-wrap">
+        <table class="ctable">
+          <thead><tr><th>조성</th><th>i (단)</th><th>ii° (감)</th><th>III (장)</th><th>iv (단)</th><th>v (단)</th><th>VI (장)</th><th>VII (장)</th></tr></thead>
+          <tbody>
+            <tr data-key="A minor"><td class="k">A minor · A단조</td><td class="min">Am</td><td class="dim">Bdim</td><td class="maj">C</td><td class="min">Dm</td><td class="min">Em</td><td class="maj">F</td><td class="maj">G</td></tr>
+            <tr data-key="E minor"><td class="k">E minor · E단조</td><td class="min">Em</td><td class="dim">F#dim</td><td class="maj">G</td><td class="min">Am</td><td class="min">Bm</td><td class="maj">C</td><td class="maj">D</td></tr>
+            <tr data-key="B minor"><td class="k">B minor · B단조</td><td class="min">Bm</td><td class="dim">C#dim</td><td class="maj">D</td><td class="min">Em</td><td class="min">F#m</td><td class="maj">G</td><td class="maj">A</td></tr>
+            <tr data-key="F# minor"><td class="k">F# minor · F#단조</td><td class="min">F#m</td><td class="dim">G#dim</td><td class="maj">A</td><td class="min">Bm</td><td class="min">C#m</td><td class="maj">D</td><td class="maj">E</td></tr>
+            <tr data-key="D minor"><td class="k">D minor · D단조</td><td class="min">Dm</td><td class="dim">Edim</td><td class="maj">F</td><td class="min">Gm</td><td class="min">Am</td><td class="maj">Bb</td><td class="maj">C</td></tr>
+            <tr data-key="G minor"><td class="k">G minor · G단조</td><td class="min">Gm</td><td class="dim">Adim</td><td class="maj">Bb</td><td class="min">Cm</td><td class="min">Dm</td><td class="maj">Eb</td><td class="maj">F</td></tr>
+            <tr data-key="C minor"><td class="k">C minor · C단조</td><td class="min">Cm</td><td class="dim">Ddim</td><td class="maj">Eb</td><td class="min">Fm</td><td class="min">Gm</td><td class="maj">Ab</td><td class="maj">Bb</td></tr>
+            <tr data-key="F minor"><td class="k">F minor · F단조</td><td class="min">Fm</td><td class="dim">Gdim</td><td class="maj">Ab</td><td class="min">Bbm</td><td class="min">Cm</td><td class="maj">Db</td><td class="maj">Eb</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="section">
+      <div class="slabel">🔄 자주 쓰는 코드 진행</div>
+      <div class="prog-grid">
+        <div class="prog-card" data-prog="I-V-vi-IV chord progression"><div class="prog-name">팝의 왕도 · Axis of Awesome</div><div class="prog-chords">I – V – vi – IV</div><div class="prog-desc">C–G–Am–F · 가장 대중적인 팝</div></div>
+        <div class="prog-card" data-prog="I-IV-V chord progression"><div class="prog-name">블루스 / 록 / 컨트리 기본</div><div class="prog-chords">I – IV – V</div><div class="prog-desc">C–F–G · 강한 해결감</div></div>
+        <div class="prog-card" data-prog="ii-V-I jazz chord progression"><div class="prog-name">재즈 표준 진행 (2-5-1)</div><div class="prog-chords">ii – V – I</div><div class="prog-desc">Dm7–G7–Cmaj7</div></div>
+        <div class="prog-card" data-prog="vi-IV-I-V chord progression"><div class="prog-name">감성 팝 / 발라드</div><div class="prog-chords">vi – IV – I – V</div><div class="prog-desc">Am–F–C–G · 어둡고 감성적</div></div>
+        <div class="prog-card" data-prog="I-vi-IV-V chord progression"><div class="prog-name">50년대 도우왑</div><div class="prog-chords">I – vi – IV – V</div><div class="prog-desc">C–Am–F–G · 레트로</div></div>
+        <div class="prog-card" data-prog="I-V-vi-iii-IV canon chord progression"><div class="prog-name">캐논 진행</div><div class="prog-chords">I – V – vi – iii – IV</div><div class="prog-desc">C–G–Am–Em–F · 서사적</div></div>
+        <div class="prog-card" data-prog="i-VII-VI-VII minor modal progression"><div class="prog-name">모달 록 / 드라마틱</div><div class="prog-chords">i – VII – VI – VII</div><div class="prog-desc">Am–G–F–G · 긴장감</div></div>
+        <div class="prog-card" data-prog="I-IV-vi-V chord progression"><div class="prog-name">팝 발라드</div><div class="prog-chords">I – IV – vi – V</div><div class="prog-desc">C–F–Am–G · 따뜻한 감성</div></div>
+        <div class="prog-card" data-prog="IM7-IIIm7-IVM7-V7 lyrical progression"><div class="prog-name">서정적 발라드 진행</div><div class="prog-chords">IM7 – IIIm7 – IVM7 – V7</div><div class="prog-desc">한국 발라드 많이 사용</div></div>
+        <div class="prog-card" data-prog="i-VI-III-VII pop minor progression"><div class="prog-name">팝 단조 / K팝 발라드</div><div class="prog-chords">i – VI – III – VII</div><div class="prog-desc">Am–F–C–G 변형</div></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="slabel">🎭 모드 / 스케일 키워드</div>
+      <div class="chips" id="scale-chips"></div>
+    </div>
+    <div class="section">
+      <div class="slabel">🎯 SUNO 조성 표기 예시 (클릭하여 추가)</div>
+      <div class="chips" id="key-chips"></div>
+    </div>
+    <div class="section">
+      <div class="slabel">🔊 간접 음역 유도 키워드</div>
+      <div class="chips" id="pitch-chips"></div>
+    </div>
+  </div>
+
+  <div class="pane" id="pane-situations"></div>
+
+  <!-- 가사 필드 — 정적 HTML -->
+  <div class="pane" id="pane-lyrics">
+    <div class="info"><strong>가사 필드(Lyrics Field)</strong>는 Style 필드와 별개입니다. 구조 태그와 지시어를 가사와 함께 사용하세요.<br>모든 태그/지시어는 클릭하면 클립보드에 복사됩니다.</div>
+    <div class="section">
+      <div class="slabel">🏷️ 기본 구조 태그</div>
+      <div class="tag-ref">
+        <span class="tag-chip">[Intro]</span><span class="tag-chip">[Verse 1]</span><span class="tag-chip">[Verse 2]</span>
+        <span class="tag-chip">[Pre-Chorus]</span><span class="tag-chip">[Chorus]</span><span class="tag-chip">[Post-Chorus]</span>
+        <span class="tag-chip">[Bridge]</span><span class="tag-chip">[Outro]</span><span class="tag-chip">[Interlude]</span>
+        <span class="tag-chip">[Hook]</span><span class="tag-chip">[Refrain]</span><span class="tag-chip">[Break]</span>
+        <span class="tag-chip">[Buildup]</span><span class="tag-chip">[Drop]</span><span class="tag-chip">[Solo]</span>
+        <span class="tag-chip">[Instrumental]</span><span class="tag-chip">[Rap]</span><span class="tag-chip">[Rap Verse]</span>
+        <span class="tag-chip">[Spoken Word]</span><span class="tag-chip">[Ad-lib]</span><span class="tag-chip">[Skit]</span>
+        <span class="tag-chip">[Fade In]</span><span class="tag-chip">[Fade Out]</span><span class="tag-chip">[Cold Ending]</span>
+      </div>
+    </div>
+    <div class="section">
+      <div class="slabel">✏️ 보컬 지시어</div>
+      <div class="tag-ref">
+        <span class="dir-chip">(softly)</span><span class="dir-chip">(building intensity)</span><span class="dir-chip">(intense)</span>
+        <span class="dir-chip">(whispered)</span><span class="dir-chip">(powerful)</span><span class="dir-chip">(spoken)</span>
+        <span class="dir-chip">(harmonized)</span><span class="dir-chip">(falsetto)</span><span class="dir-chip">(belting)</span>
+        <span class="dir-chip">(raspy)</span><span class="dir-chip">(emotional)</span><span class="dir-chip">(tender)</span>
+        <span class="dir-chip">(triumphant)</span><span class="dir-chip">(rap)</span><span class="dir-chip">(sung)</span>
+        <span class="dir-chip">(vulnerable)</span><span class="dir-chip">(sultry)</span><span class="dir-chip">(aggressive)</span>
+      </div>
+    </div>
+    <div class="section">
+      <div class="slabel">⚡ 에너지 전환 태그</div>
+      <div class="tag-ref">
+        <span class="energy-chip">[big energy]</span><span class="energy-chip">[energy drop]</span>
+        <span class="energy-chip">[breakdown]</span><span class="energy-chip">[climax]</span>
+        <span class="energy-chip">[tension build]</span><span class="energy-chip">[release]</span>
+        <span class="energy-chip">[stripped back]</span><span class="energy-chip">[full production]</span>
+        <span class="energy-chip">[quiet]</span><span class="energy-chip">[loud]</span>
+        <span class="energy-chip">[explosive entry]</span><span class="energy-chip">[half-time feel]</span>
+      </div>
+    </div>
+    <div class="section">
+      <div class="slabel">🎸 구간별 악기 지정 태그</div>
+      <div class="tag-ref">
+        <span class="inst-chip">[piano only]</span><span class="inst-chip">[guitar only]</span>
+        <span class="inst-chip">[drums only]</span><span class="inst-chip">[bass and drums]</span>
+        <span class="inst-chip">[strings enter]</span><span class="inst-chip">[strings out]</span>
+        <span class="inst-chip">[no drums]</span><span class="inst-chip">[acoustic only]</span>
+        <span class="inst-chip">[full orchestra]</span><span class="inst-chip">[808 drop]</span>
+        <span class="inst-chip">[no vocals]</span><span class="inst-chip">[vocals only]</span>
+        <span class="inst-chip">[percussion heavy]</span><span class="inst-chip">[horn section]</span>
+      </div>
+    </div>
+    <div class="section">
+      <div class="slabel">🌊 분위기 전환 태그</div>
+      <div class="tag-ref">
+        <span class="tag-chip">[melancholic]</span><span class="tag-chip">[hopeful]</span>
+        <span class="tag-chip">[aggressive]</span><span class="tag-chip">[triumphant]</span>
+        <span class="tag-chip">[desperate]</span><span class="tag-chip">[nostalgic]</span>
+        <span class="tag-chip">[dreamy]</span><span class="tag-chip">[dark]</span>
+        <span class="tag-chip">[bright]</span><span class="tag-chip">[intimate]</span>
+        <span class="tag-chip">[epic]</span><span class="tag-chip">[tender]</span>
+      </div>
+    </div>
+    <div class="section">
+      <div class="slabel">🔄 고급 기법 태그 (v5)</div>
+      <div class="tag-ref">
+        <span class="energy-chip">[key change]</span><span class="energy-chip">[key change up]</span>
+        <span class="energy-chip">[tempo change]</span><span class="energy-chip">[modulation]</span>
+        <span class="energy-chip">[reprise]</span><span class="energy-chip">[a cappella]</span>
+        <span class="energy-chip">[cold ending]</span><span class="energy-chip">[tempo slows]</span>
+        <span class="energy-chip">[doubled vocals]</span><span class="energy-chip">[wide stereo]</span>
+        <span class="energy-chip">[vocal chops]</span><span class="energy-chip">[call and response]</span>
+      </div>
+    </div>
+    <div class="section">
+      <div class="slabel">🎛️ 파라미터 태그 예시 (구간 내 세부 지정 — 클릭하여 복사)</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <span class="tag-chip" style="border-radius:7px;text-align:left;font-size:.72rem;white-space:normal;">[Verse: whispered vocals, acoustic guitar only]</span>
+        <span class="tag-chip" style="border-radius:7px;text-align:left;font-size:.72rem;white-space:normal;">[Chorus: full band, powerful vocal, high energy]</span>
+        <span class="tag-chip" style="border-radius:7px;text-align:left;font-size:.72rem;white-space:normal;">[Verse: dry vocal, no reverb, close mic]</span>
+        <span class="tag-chip" style="border-radius:7px;text-align:left;font-size:.72rem;white-space:normal;">[Bridge: vocal only, no instruments, stripped back]</span>
+        <span class="tag-chip" style="border-radius:7px;text-align:left;font-size:.72rem;white-space:normal;">[Pre-Chorus: building tension, strings enter]</span>
+        <span class="tag-chip" style="border-radius:7px;text-align:left;font-size:.72rem;white-space:normal;">[Chorus: key change, bigger production]</span>
+        <span class="tag-chip" style="border-radius:7px;text-align:left;font-size:.72rem;white-space:normal;">[Outro: fade, just guitar and voice]</span>
+        <span class="tag-chip" style="border-radius:7px;text-align:left;font-size:.72rem;white-space:normal;">[Bridge: tempo slows, half-time feel]</span>
+      </div>
+    </div>
+    <div class="section">
+      <div class="slabel">📋 가사 구조 템플릿 (클릭 → 전체 복사)</div>
+      <div class="lyric-card" onclick="copyLyric(this)">
+        <div class="lyric-title">🎵 기본 팝 구조 <span>클릭하여 복사</span></div>
+        <div class="lyric-body">[Intro]
+
+[Verse 1]
+상황·감정 설정
+
+[Pre-Chorus]
+(building intensity)
+
+[Chorus]
+(powerful) 핵심 후렴구
+
+[Verse 2]
+이야기 심화
+
+[Pre-Chorus]
+(building intensity)
+
+[Chorus]
+(powerful)
+
+[Bridge]
+(emotional) 분위기 전환
+
+[Chorus]
+(triumphant)
+
+[Outro]
+(softly)</div>
+      </div>
+      <div class="lyric-card" onclick="copyLyric(this)">
+        <div class="lyric-title">💿 발라드 랩 구조 (Ballad Rap) <span>클릭하여 복사</span></div>
+        <div class="lyric-body">[Intro]
+(softly) 피아노/현악 인트로
+
+[Verse 1]
+(sung) 발라드 멜로디 절
+
+[Chorus]
+(emotional, sung) 감성 후렴구
+
+[Rap Verse]
+(rap) 랩 벌스 — 이야기 심화
+
+[Chorus]
+(sung)
+
+[Bridge]
+(rap, building intensity)
+
+[Final Chorus]
+(belting) 클라이맥스
+
+[Outro]
+(softly, sung)</div>
+      </div>
+      <div class="lyric-card" onclick="copyLyric(this)">
+        <div class="lyric-title">🎤 힙합 / 트랩 구조 <span>클릭하여 복사</span></div>
+        <div class="lyric-body">[Intro]
+(spoken)
+
+[Verse 1]
+(rap)
+
+[Hook]
+(catchy)
+
+[Verse 2]
+(rap)
+
+[Hook]
+
+[Bridge]
+(emotional)
+
+[Verse 3]
+(rap)
+
+[Hook]
+(intense)
+
+[Outro]
+(ad-libs)</div>
+      </div>
+      <div class="lyric-card" onclick="copyLyric(this)">
+        <div class="lyric-title">🎛️ EDM / 일렉트로닉 구조 <span>클릭하여 복사</span></div>
+        <div class="lyric-body">[Intro]
+(atmospheric)
+
+[Buildup]
+(building intensity)
+
+[Drop]
+(powerful)
+
+[Verse]
+(breathy vocals)
+
+[Buildup]
+(building)
+
+[Drop]
+(intense)
+
+[Breakdown]
+(softly)
+
+[Buildup]
+(building intensity)
+
+[Drop]
+(triumphant)
+
+[Outro]
+(fading)</div>
+      </div>
+      <div class="lyric-card" onclick="copyLyric(this)">
+        <div class="lyric-title">🎸 밴드 / 인디록 구조 <span>클릭하여 복사</span></div>
+        <div class="lyric-body">[Intro]
+(guitar riff)
+
+[Verse 1]
+(conversational)
+
+[Chorus]
+(building, full band)
+
+[Verse 2]
+(intense)
+
+[Chorus]
+
+[Guitar Solo]
+(distorted, emotional)
+
+[Bridge]
+(powerful)
+
+[Final Chorus]
+(triumphant, full band)
+
+[Outro]
+(fading softly)</div>
+      </div>
+      <div class="lyric-card" onclick="copyLyric(this)">
+        <div class="lyric-title">🇰🇷 한국 발라드 파라미터 템플릿 <span>클릭하여 복사</span></div>
+        <div class="lyric-body">[Intro]
+
+[Verse 1: soft piano, dry vocal, intimate]
+가사
+
+[Pre-Chorus: building tension, strings enter]
+가사
+
+[Chorus: full band, powerful vocal, high energy]
+가사
+
+[Verse 2: acoustic guitar, warm]
+가사
+
+[Chorus: emotional]
+가사
+
+[Bridge: vocal only, stripped back]
+가사
+
+[Final Chorus: key change up, bigger production, belting]
+가사
+
+[Outro: piano only, fade]</div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="slabel">💡 가사 필드 팁</div>
+      <div class="info" style="margin-bottom:0">
+        <strong>1.</strong> 구조 태그 [ ]와 파라미터는 같이 써도 됩니다: <em>[Verse: dry vocal, no reverb]</em><br>
+        <strong>2.</strong> (rap)과 (sung)을 번갈아 쓰면 발라드랩 스타일을 유도할 수 있습니다.<br>
+        <strong>3.</strong> [key change] / [key change up]으로 전조를 유도할 수 있습니다.<br>
+        <strong>4.</strong> [cold ending]은 갑작스럽게 끊기는 엔딩입니다.<br>
+        <strong>5.</strong> 섹션당 파라미터 2~4개가 최적 — 너무 많으면 충돌할 수 있습니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- 기본 규칙 — 데이터 기반 -->
+  <div class="pane" id="pane-rules">
+    <div class="info info-good"><strong>✅ 초록색 키워드</strong>는 클릭하여 프롬프트 빌더에 추가할 수 있습니다. <strong>빨간색</strong>은 SUNO 품질을 저하시키는 금지 키워드로 참고만 하세요.</div>
+  </div>
+  <!-- 악기/프로덕션/장면 — 데이터 기반 -->
+  <div class="pane" id="pane-instruments"></div>
+  <div class="pane" id="pane-production">
+    <div class="info"><strong>프로덕션 키워드</strong>는 Style 필드에서 악기 키워드 뒤에 넣으면 효과적입니다. 리버브/딜레이 섹션의 키워드는 "이펙트 없음" 섹션(보컬 탭)과 반대 개념입니다.</div>
+  </div>
+  <div class="pane" id="pane-vibes">
+    <div class="info"><strong>장면 분위기 키워드</strong>는 구체적인 장면이나 상황을 음악으로 표현할 때 사용합니다. 장르 + 악기 + 장면 키워드 조합이 가장 효과적입니다.</div>
+  </div>
+
+  <!-- 주제별 완성 조합 -->
+  <div class="pane" id="pane-presets">
+    <div class="info">각 카드는 <strong>SUNO Style 필드에 바로 붙여넣을 수 있는 완성 조합</strong>입니다. 카드 클릭 → 클립보드에 복사 · <strong>+ 빌더</strong> 버튼 → 하단 빌더에 추가하여 다른 키워드와 합치기.</div>
+    <div class="preset-filters" id="presetFilters"></div>
+    <div class="preset-grid" id="presetGrid"></div>
+  </div>
+</div>
+
+<!-- PROMPT BUILDER -->
+<div id="builder">
+  <div class="brow">
+    <span class="blabel">🛠️ Style 프롬프트 빌더 &nbsp;·&nbsp; <span id="cnt">0</span>개 선택</span>
+    <div class="bbtns">
+      <button class="btn btn-clear" onclick="clearAll()">지우기</button>
+      <button class="btn btn-copy" onclick="copyPrompt()">📋 복사</button>
+    </div>
+  </div>
+  <div id="output" class="empty">키워드를 클릭하여 SUNO Style 프롬프트를 조합하세요...</div>
+</div>
+<div id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────────── DATA
+const DATA = {
+  genres: [
+    { label: '🇰🇷 K-Music 계열', chips: [
+      ['Korean ballad','한국발라드'],['Korean pop','한국팝'],['Korean indie pop','한국인디팝'],
+      ['Korean R&B','한국알앤비'],['Korean hip-hop','한국힙합'],['trot','트로트'],
+      ['pansori','판소리'],['K-indie','케이인디'],
+    ]},
+    { label: '🎹 Pop 계열', chips: [
+      ['pop','팝'],['k-pop','케이팝'],['j-pop','제이팝'],['synth-pop','신스팝'],
+      ['indie pop','인디팝'],['dream pop','드림팝'],['power pop','파워팝'],
+      ['electropop','일렉트로팝'],['bedroom pop','베드룸팝'],['hyperpop','하이퍼팝'],
+      ['art pop','아트팝'],['dark pop','다크팝'],['bubblegum pop','버블검팝'],
+      ['sophisti-pop','소피스티팝'],['chamber pop','챔버팝'],['city pop','시티팝'],
+      ['adult contemporary','어덜트컨템포러리'],['power ballad','파워발라드'],
+    ]},
+    { label: '🎸 Rock 계열', chips: [
+      ['rock','록'],['classic rock','클래식록'],['hard rock','하드록'],
+      ['soft rock','소프트록'],['alternative rock','얼터너티브록'],['indie rock','인디록'],
+      ['punk rock','펑크록'],['post-rock','포스트록'],['psychedelic rock','사이키델릭록'],
+      ['progressive rock','프로그레시브록'],['grunge','그런지'],['shoegaze','슈게이징'],
+      ['glam rock','글램록'],['garage rock','개러지록'],['surf rock','서프록'],
+      ['emo','에모'],['post-punk','포스트펑크'],['new wave','뉴웨이브'],
+      ['math rock','매스록'],['lo-fi rock','로파이록'],['noise rock','노이즈록'],
+    ]},
+    { label: '🎷 Jazz 계열', chips: [
+      ['jazz','재즈'],['smooth jazz','스무스재즈'],['bebop','비밥'],['swing','스윙'],
+      ['cool jazz','쿨재즈'],['jazz fusion','재즈퓨전'],['nu jazz','뉴재즈'],
+      ['acid jazz','애시드재즈'],['latin jazz','라틴재즈'],['free jazz','프리재즈'],
+      ['vocal jazz','보컬재즈'],['big band','빅밴드'],['gypsy jazz','집시재즈'],
+      ['bossa nova','보사노바'],['cafe jazz','카페재즈'],['swing jazz','스윙재즈'],
+    ]},
+    { label: '🎻 Classical 계열', chips: [
+      ['classical','클래식'],['orchestral','오케스트라'],['baroque','바로크'],
+      ['symphony','심포니'],['chamber music','실내악'],['romantic era','낭만주의'],
+      ['neoclassical','신고전주의'],['minimalist classical','미니멀리즘'],
+      ['string quartet','현악사중주'],['piano concerto','피아노협주곡'],
+      ['opera','오페라'],['choral','합창음악'],['impressionist','인상주의'],
+      ['film score','영화음악'],['piano solo','피아노독주'],
+    ]},
+    { label: '🎤 Hip-hop / R&B 계열', chips: [
+      ['hip-hop','힙합'],['rap','랩'],['trap','트랩'],['boom bap','붐뱁'],
+      ['lo-fi hip hop','로파이힙합'],['drill','드릴'],['UK drill','영국드릴'],
+      ['cloud rap','클라우드랩'],['emo rap','에모랩'],['conscious rap','컨셔스랩'],
+      ['lyrical rap','서정적랩'],['old school hip-hop','올드스쿨힙합'],['jazz rap','재즈랩'],
+      ['g-funk','지펑크'],['R&B','알앤비'],['neo soul','네오소울'],['soul','소울'],
+      ['contemporary R&B','현대알앤비'],['motown','모타운'],['funk soul','펑크소울'],
+      ['gospel','가스펠'],['quiet storm','콰이어트스톰'],['new jack swing','뉴잭스윙'],
+      ['dark R&B','다크알앤비'],['smooth R&B','스무스알앤비'],['alternative R&B','얼터너티브알앤비'],
+    ]},
+    { label: '🎛️ Electronic / EDM 계열', chips: [
+      ['electronic','일렉트로닉'],['EDM','이디엠'],['house','하우스'],
+      ['deep house','딥하우스'],['tech house','테크하우스'],['techno','테크노'],
+      ['trance','트랜스'],['ambient','앰비언트'],['synthwave','신스웨이브'],
+      ['retrowave','레트로웨이브'],['vaporwave','베이퍼웨이브'],['future bass','퓨처베이스'],
+      ['drum and bass','드럼앤베이스'],['dubstep','덥스텝'],['lo-fi','로파이'],
+      ['chillwave','칠웨이브'],['darkwave','다크웨이브'],['industrial','인더스트리얼'],
+      ['electro','일렉트로'],['progressive house','프로그레시브하우스'],
+      ['minimal techno','미니멀테크노'],['IDM','IDM(지능적전자)'],
+      ['trip-hop','트립합'],['downtempo','다운템포'],['breakbeat','브레이크비트'],
+    ]},
+    { label: '🤠 Country / Folk 계열', chips: [
+      ['country','컨트리'],['country pop','컨트리팝'],['bluegrass','블루그래스'],
+      ['americana','아메리카나'],['outlaw country','아웃로컨트리'],['folk','포크'],
+      ['folk pop','포크팝'],['indie folk','인디포크'],['acoustic folk','어쿠스틱포크'],
+      ['celtic folk','켈틱포크'],['singer-songwriter','싱어송라이터'],
+    ]},
+    { label: '🤘 Metal 계열', chips: [
+      ['metal','메탈'],['heavy metal','헤비메탈'],['death metal','데스메탈'],
+      ['black metal','블랙메탈'],['progressive metal','프로그레시브메탈'],
+      ['metalcore','메탈코어'],['power metal','파워메탈'],['doom metal','둠메탈'],
+      ['thrash metal','스래시메탈'],['nu-metal','뉴메탈'],
+      ['symphonic metal','심포닉메탈'],['folk metal','포크메탈'],
+      ['post-metal','포스트메탈'],['stoner rock','스토너록'],['hardcore','하드코어'],
+    ]},
+    { label: '🌍 World Music 계열', chips: [
+      ['afrobeats','아프로비츠'],['afropop','아프로팝'],['reggae','레게'],
+      ['ska','스카'],['dub','덥'],['dancehall','댄스홀'],['salsa','살사'],
+      ['flamenco','플라멩코'],['latin pop','라틴팝'],['reggaeton','레게톤'],
+      ['cumbia','쿰비아'],['tango','탱고'],['celtic','켈틱'],['arabic','아라비아'],
+      ['bollywood','볼리우드'],['middle eastern','중동음악'],['samba','삼바'],['mariachi','마리아치'],
+    ]},
+    { label: '🎶 Blues / Soul / Funk 계열', chips: [
+      ['blues','블루스'],['delta blues','델타블루스'],['electric blues','일렉트릭블루스'],
+      ['chicago blues','시카고블루스'],['blues rock','블루스록'],['soul blues','소울블루스'],
+      ['rhythm and blues','리듬앤블루스'],['funk','펑크'],['disco','디스코'],
+    ]},
+    { label: '🌙 New Age / Ambient 계열', chips: [
+      ['new age','뉴에이지'],['meditation music','명상음악'],['healing music','힐링음악'],
+      ['nature sounds','자연의소리'],['space music','우주음악'],['drone','드론'],
+      ['dark ambient','다크앰비언트'],['cinematic ambient','시네마틱앰비언트'],['soundscape','사운드스케이프'],
+    ]},
+    { label: '🎸 주요 악기 키워드', chips: [
+      ['piano','피아노'],['electric guitar','일렉기타'],['acoustic guitar','어쿠스틱기타'],
+      ['bass guitar','베이스기타'],['drums','드럼'],['violin','바이올린'],
+      ['cello','첼로'],['trumpet','트럼펫'],['saxophone','색소폰'],['flute','플루트'],
+      ['synthesizer','신디사이저'],['harp','하프'],['organ','오르간'],
+      ['harmonica','하모니카'],['banjo','밴조'],['ukulele','우쿨렐레'],
+      ['percussion','퍼커션'],['808 bass','808베이스'],['strings','현악기'],
+      ['brass section','금관악기'],['mandolin','만돌린'],
+    ]},
+    { label: '🎚️ 프로덕션 스타일', chips: [
+      ['lo-fi','로파이'],['hi-fi','하이파이'],['studio quality','스튜디오퀄리티'],
+      ['live recording','라이브레코딩'],['analog','아날로그'],['vintage','빈티지'],
+      ['modern production','현대프로덕션'],['raw','날것의(로우)'],['polished','세련된'],
+      ['wall of sound','사운드의벽'],['80s production','80년대스타일'],
+      ['90s production','90년대스타일'],['cinematic','시네마틱'],
+    ]},
+  ],
+
+  combos: [
+    { label: '💫 Pop 기반 조합', chips: [
+      ['electropop','일렉트로팝'],['folk pop','포크팝'],['jazz pop','재즈팝'],
+      ['classical pop','클래식팝'],['R&B pop','알앤비팝'],['hip-hop pop','힙합팝'],
+      ['baroque pop','바로크팝'],['dream pop shoegaze','드림팝+슈게이징'],
+      ['acoustic pop','어쿠스틱팝'],['dark pop','다크팝'],['art pop','아트팝'],
+    ]},
+    { label: '🎸 Rock 기반 조합', chips: [
+      ['folk rock','포크록'],['blues rock','블루스록'],['country rock','컨트리록'],
+      ['jazz rock','재즈록'],['art rock','아트록'],['post-punk revival','포스트펑크리바이벌'],
+      ['indie folk rock','인디포크록'],['southern rock','서던록'],['funk rock','펑크록'],
+      ['soul rock','소울록'],['reggae rock','레게록'],['electronic rock','일렉트로닉록'],
+    ]},
+    { label: '🎛️ Electronic 기반 조합', chips: [
+      ['electronic R&B','일렉트로닉알앤비'],['future R&B','퓨처알앤비'],
+      ['tropical house','트로피칼하우스'],['melodic dubstep','멜로딕덥스텝'],
+      ['lo-fi hip hop','로파이힙합'],['chillhop','칠홉'],['ambient pop','앰비언트팝'],
+      ['electro swing','일렉트로스윙'],['dark electronic','다크일렉트로닉'],
+      ['future garage','퓨처개러지'],['wave','웨이브'],['psytrance','사이트랜스'],
+    ]},
+    { label: '🎷 Jazz 기반 조합', chips: [
+      ['jazz fusion','재즈퓨전'],['jazz hop','재즈합'],['jazz funk','재즈펑크'],
+      ['soul jazz','소울재즈'],['jazz R&B','재즈알앤비'],['nu jazz electronic','뉴재즈일렉'],
+      ['jazz trap','재즈트랩'],['bossa nova pop','보사노바팝'],
+    ]},
+    { label: '🎻 Classical 기반 조합', chips: [
+      ['cinematic orchestral','시네마틱오케스트라'],['classical crossover','클래식크로스오버'],
+      ['neoclassical pop','네오클래식팝'],['classical electronic','클래식일렉트로닉'],
+      ['symphonic rock','심포닉록'],['orchestral pop','오케스트라팝'],
+      ['orchestral hip-hop','오케스트라힙합'],['orchestral trap','오케스트라트랩'],
+      ['string quartet and beats','현악사중주+비트'],['post-classical','포스트클래식'],
+      ['cinematic R&B','시네마틱알앤비'],['chamber folk','챔버포크'],
+    ]},
+    { label: '🎤 Hip-hop 기반 조합', chips: [
+      ['jazz hip hop','재즈힙합'],['soul hip hop','소울힙합'],['trap soul','트랩소울'],
+      ['alternative hip hop','얼터너티브힙합'],['folk rap','포크랩'],['indie folk rap','인디포크랩'],
+      ['R&B rap','알앤비랩'],['electronic hip hop','일렉트로닉힙합'],
+    ]},
+    { label: '🌍 World 기반 조합', chips: [
+      ['world fusion','월드퓨전'],['reggae pop','레게팝'],['celtic pop','켈틱팝'],
+      ['flamenco pop','플라멩코팝'],['bollywood pop','볼리우드팝'],
+      ['afrobeats electronic','아프로비츠일렉'],['latin pop','라틴팝'],
+      ['shibuya-kei','시부야계(일본팝)'],
+    ]},
+    { label: '💿 발라드 + 랩 조합 (Ballad Rap)', chips: [
+      ['ballad rap','발라드랩'],['rap ballad','랩발라드'],['melodic rap','멜로딕랩'],
+      ['Korean ballad rap','한국발라드랩'],['emotional hip-hop','감성힙합'],
+      ['acoustic hip-hop','어쿠스틱힙합'],['piano hip-hop','피아노힙합'],
+      ['soul rap','소울랩'],['neosoul rap','네오소울랩'],
+      ['R&B ballad rap','알앤비발라드랩'],['cinematic hip-hop','시네마틱힙합'],
+      ['spoken word ballad','낭독형발라드'],['trap ballad','트랩발라드'],
+      ['introspective rap','내성적감성랩'],['string rap','현악기랩'],
+    ]},
+    { label: '🎸 밴드 기반 조합 (Band)', chips: [
+      ['live band','라이브밴드'],['full band arrangement','풀밴드편성'],
+      ['indie rock band','인디록밴드'],['pop rock band','팝록밴드'],
+      ['jazz quartet','재즈사중주'],['blues band','블루스밴드'],
+      ['folk ensemble','포크앙상블'],['punk band','펑크밴드'],
+      ['alternative band','얼터너티브밴드'],['post-rock ensemble','포스트록앙상블'],
+      ['math rock band','매스록밴드'],['shoegaze band','슈게이징밴드'],
+      ['psychedelic band','사이키델릭밴드'],['new wave band','뉴웨이브밴드'],
+      ['emo band','에모밴드'],['funk band','펑크밴드'],['soul band','소울밴드'],
+      ['power trio','파워트리오(기타/베이스/드럼)'],['four-piece band','4인조밴드'],
+      ['live band feel','라이브밴드감성'],['horn section added','혼섹션추가'],
+    ]},
+    { label: '🔀 어쿠스틱 + 일렉트로닉 조합', chips: [
+      ['acoustic electronic','어쿠스틱+전자음'],['folk electronic','포크+일렉트로닉'],
+      ['acoustic trap','어쿠스틱+트랩'],['guitar and synth','기타+신스'],
+      ['piano and 808','피아노+808'],['strings and electronic','현악+전자음'],
+      ['acoustic hip-hop','어쿠스틱힙합'],
+    ]},
+    { label: '🌙 감성 + 클럽 (Emotional Club)', chips: [
+      ['emotional club','감성클럽'],['sad banger','슬픈클럽뱅어'],
+      ['melancholic dance','우울한댄스'],['dark R&B club','다크알앤비클럽'],
+      ['chill and danceable','칠+댄서블'],['lo-fi club','로파이클럽'],
+      ['cinematic dance','시네마틱댄스'],
+    ]},
+    { label: '🇰🇷 한국 전통 + 현대', chips: [
+      ['trot and pop','트로트팝'],['pansori and hip-hop','판소리힙합'],
+      ['Korean traditional and electronic','국악+전자음'],['fusion gugak','퓨전국악'],
+      ['K-folk and pop','한국민요팝'],
+    ]},
+    { label: '🌊 무드 기반 조합', chips: [
+      ['sad and groovy','슬프지만그루브한'],['dark and beautiful','어둡고아름다운'],
+      ['hopeful and melancholic','희망적이지만우울한'],['quiet and powerful','조용하지만강렬한'],
+      ['epic and intimate','웅장하지만친밀한'],
+    ]},
+    { label: '🌟 트렌디 / 장르혼합', chips: [
+      ['hyperpop electronic','하이퍼팝일렉'],['bedroom pop indie','베드룸팝인디'],
+      ['emo rap trap','에모랩트랩'],['sadcore','새드코어'],['slowcore','슬로우코어'],
+      ['midwest emo','미드웨스트에모'],['nu-gaze','뉴게이즈'],['digicore','디지코어'],
+    ]},
+  ],
+
+  vocals: [
+    { label: '🎙️ 창법 / 기법', chips: [
+      ['vibrato','비브라토'],['falsetto','팔세토(가성)'],['melisma','멜리스마(꾸밈음)'],
+      ['belting','벨팅(강한고음)'],['head voice','두성'],['chest voice','흉성'],
+      ['mixed voice','믹스보이스'],['growl','그로울'],['scream','스크림'],
+      ['whisper vocals','위스퍼보컬'],['breathy vocals','브레시보컬'],
+      ['nasal vocals','비음보컬'],['vocal runs','보컬런'],
+      ['riff and run','리프앤런'],['spoken word','스포큰워드'],['rap flow','랩플로우'],
+      ['scat singing','스캣'],['crooning','크루닝(감미로운)'],
+    ]},
+    { label: '🎨 음색 / 톤', chips: [
+      ['smooth vocals','부드러운보컬'],['raspy vocals','쉰목소리보컬'],
+      ['husky voice','허스키보이스'],['silky smooth','실키스무스'],
+      ['warm vocals','따뜻한보컬'],['bright vocals','밝은보컬'],
+      ['dark tone','어두운톤'],['rich voice','풍성한목소리'],
+      ['powerful vocals','파워풀보컬'],['delicate vocals','섬세한보컬'],
+      ['velvety','벨벳같은'],['gruff','거친걸걸한'],['angelic','천사같은'],
+      ['haunting vocals','귀신같은보컬'],['airy vocal','공기감있는보컬'],
+    ]},
+    { label: '🎵 음역 / 파트', chips: [
+      ['soprano','소프라노'],['mezzo-soprano','메조소프라노'],['alto','알토'],
+      ['contralto','콘트랄토'],['tenor','테너'],['baritone','바리톤'],
+      ['bass vocals','베이스보컬'],['countertenor','카운터테너'],
+      ['high-pitched','고음역'],['low-pitched','저음역'],['deep voice','깊은목소리'],
+      ['wide vocal range','넓은음역'],
+    ]},
+    { label: '👥 합창 / 앙상블', chips: [
+      ['choir','합창단'],['harmony','하모니'],['background vocals','백보컬/코러스'],
+      ['call and response','콜앤리스펀스'],['a cappella','아카펠라'],
+      ['vocal layers','보컬레이어'],['unison','유니즌(제창)'],
+      ['gospel choir','가스펠합창'],['four-part harmony','4성부화음'],
+      ['double tracked vocals','더블트랙보컬'],['layered vocals','여러트랙보컬'],
+    ]},
+    { label: '🎭 보컬 감정 표현', chips: [
+      ['soulful vocal','감정깊이담긴'],['emotive vocal','감정적인보컬'],
+      ['intimate vocal','친밀한보컬'],['soft vocal','부드러운보컬'],
+      ['raw vocals','날것의보컬'],['dreamy vocal','몽환적인보컬'],
+      ['vulnerable','솔직하고취약한'],['sultry','관능적인'],
+      ['heartfelt','진심어린'],['raw emotion','날것의감정'],
+    ]},
+    { label: '🚻 성별 / 언어', chips: [
+      ['male vocals','남성보컬'],['female vocals','여성보컬'],
+      ['duet male female','남녀듀엣'],['androgynous vocals','중성보컬'],
+      ['Korean vocals','한국어보컬'],['Japanese vocals','일본어보컬'],
+      ['English vocals','영어보컬'],['instrumental no vocals','기악(보컬없음)'],
+      ['wordless vocals','무가사보컬'],['operatic','오페라틱'],
+    ]},
+    { label: '✨ 이펙트 처리 (Effect)', chips: [
+      ['reverb heavy vocals','리버브강하게'],['delay effect','딜레이이펙트'],
+      ['auto-tune','오토튠'],['pitch correction','피치보정'],['vocoder','보코더'],
+      ['distorted vocals','왜곡보컬'],['lo-fi vocals','로파이보컬'],
+      ['telephone effect','전화기이펙트'],['echoed vocals','에코보컬'],
+      ['filtered vocals','필터보컬'],['pitched vocal chops','피치드보컬촙'],
+    ]},
+    { label: '🚫 이펙트 없음 / 클린 사운드 (No Effects)', chips: [
+      ['dry vocals','드라이보컬(무처리)'],['no reverb','리버브없음'],
+      ['clean vocals','클린보컬'],['unprocessed vocals','무처리보컬'],
+      ['natural sound','자연음'],['no auto-tune','오토튠없음'],
+      ['no autotune','오토튠없음(SUNO표기)'],['pure acoustic','순수어쿠스틱'],
+      ['unplugged','언플러그드'],['minimal processing','최소가공'],
+      ['raw vocal','로우보컬'],['no pitch correction','피치보정없음'],
+      ['transparent mix','투명한믹스'],['dry mix','드라이믹스'],
+      ['no effects','이펙트없음'],['no heavy effects','과한이펙트없음'],
+      ['natural pitch','자연스러운음정'],['studio dry','스튜디오드라이'],
+      ['close mic','근접마이킹'],['intimate close mic','근접마이킹친밀감'],
+    ]},
+  ],
+
+  seasons: [
+    { label: '🌸 봄 (Spring)', chips: [
+      ['spring morning','봄아침'],['cherry blossom','벚꽃'],['spring breeze','봄바람'],
+      ['fresh and bright','싱그럽고밝은'],['blooming flowers','꽃이피는'],
+      ['gentle spring rain','봄비'],['renewal','새로운시작'],
+      ['hopeful','희망찬'],['new beginnings','새출발'],['pastel colors','파스텔컬러'],
+      ['soft sunlight','부드러운햇살'],['dewy morning','이슬맺힌아침'],
+    ]},
+    { label: '☀️ 여름 (Summer)', chips: [
+      ['summer heat','여름더위'],['beach vibes','해변분위기'],['tropical','열대'],
+      ['sun-drenched','햇살가득한'],['sunshine','햇살'],['energetic','에너지넘치는'],
+      ['carefree','근심없는'],['ocean waves','파도'],['summer night','여름밤'],
+      ['hazy afternoon','아지랑이낀오후'],['lazy summer','나른한여름'],
+      ['electric summer','강렬한여름'],['fireflies','반딧불이'],
+    ]},
+    { label: '🍂 가을 (Autumn)', chips: [
+      ['autumn melancholy','가을우수'],['falling leaves','낙엽지는'],
+      ['crisp autumn air','선선한가을공기'],['amber and gold','황금빛낙엽'],
+      ['fading warmth','사그라드는온기'],['nostalgic autumn','향수어린가을'],
+      ['cozy','아늑한'],['wistful','아련한'],['golden hour','골든아워'],
+      ['bonfire','모닥불'],['sweater weather','니트날씨'],
+      ['rainy autumn','가을비'],['lonely road','쓸쓸한길'],
+    ]},
+    { label: '❄️ 겨울 (Winter)', chips: [
+      ['winter cold','겨울추위'],['snow','눈'],['snowfall','눈내리는'],
+      ['frozen','얼어붙은'],['blizzard','눈보라'],['silent winter','고요한겨울'],
+      ['frost','서리'],['cozy indoor','아늑한실내'],
+      ['cold and lonely','차갑고외로운'],['winter night','겨울밤'],
+      ['warm fireplace','따뜻한벽난로'],['christmas spirit','크리스마스'],
+      ['new year','새해'],['winter solitude','겨울고독'],
+    ]},
+    { label: '🌤️ 날씨 & 자연 현상', chips: [
+      ['rainy day','비오는날'],['thunderstorm','천둥번개'],['foggy','안개낀'],
+      ['cloudy','흐린'],['after rain','비갠후'],['wind','바람'],
+      ['moonlight','달빛'],['starry night','별빛가득한밤'],
+      ['soft rain','부슬비'],['misty','안개자욱한'],
+    ]},
+    { label: '🎭 범용 분위기', chips: [
+      ['melancholy','우울'],['euphoric','황홀한'],['dreamy','몽환적'],
+      ['dark','어두운'],['uplifting','고양되는'],['moody','감성적'],
+      ['atmospheric','분위기있는'],['ethereal','신비로운'],['intense','강렬한'],
+      ['peaceful','평화로운'],['mysterious','신비'],['romantic','낭만적'],
+      ['epic','웅장한'],['cinematic','영화같은'],['intimate','친밀한'],
+      ['gloomy','음울한'],['joyful','기쁜'],['serene','고요한'],
+      ['wistful','아련한'],['lush','풍성한'],['nocturnal','야행성밤의느낌'],
+      ['rainy day mood','비오는날감성'],['vintage vibe','옛날음악느낌'],
+      ['late night mood','늦은밤감성'],['urban atmosphere','도시적감각'],
+    ]},
+  ],
+
+  tempo: [
+    { label: '🐢 느린 템포 (20–76 BPM)', chips: [
+      ['larghissimo','라르기시모(20-40BPM)'],['grave','그라베(25-45BPM)'],
+      ['largo','라르고(40-60BPM)'],['larghetto','라르게토(60-66BPM)'],
+      ['adagio','아다지오(66-76BPM)'],['very slow','매우느리게'],
+      ['slow ballad','슬로우발라드'],
+    ]},
+    { label: '🚶 보통 템포 (76–120 BPM)', chips: [
+      ['andante','안단테(76-108BPM)'],['andantino','안단티노(80-108BPM)'],
+      ['moderato','모데라토(108-120BPM)'],['allegretto','알레그레토(112-120BPM)'],
+      ['mid-tempo','중간템포'],['walking pace','걷는속도'],['laid-back','여유로운'],
+      ['grooving','그루브한'],['steady','안정적인'],['rhythmic','리드미컬한'],
+    ]},
+    { label: '🏃 빠른 템포 (120–176 BPM)', chips: [
+      ['allegro','알레그로(120-156BPM)'],['vivace','비바체(156-176BPM)'],
+      ['uptempo','빠른템포'],['upbeat','경쾌한'],
+      ['driving','힘차게몰아치는'],['relentless','멈추지않고밀어붙이는'],
+      ['pulsing','박동치는'],['energetic','에너지넘치는'],['bouncy','통통튀는'],
+    ]},
+    { label: '⚡ 매우 빠른 템포 (176+ BPM)', chips: [
+      ['presto','프레스토(176-200BPM)'],['prestissimo','프레스티시모(200+BPM)'],
+      ['extremely fast','극도로빠른'],['frenetic','광적으로빠른'],['frantic','격렬한'],
+    ]},
+    { label: '🎯 느낌/분위기 템포 표현', chips: [
+      ['slow burn','서서히타오르는'],['floating','떠다니는'],
+      ['meditative','명상적인'],['brooding','우울하게침잠하는'],['languid','나른한'],
+      ['hypnotic','최면적인'],['slow and steady','느리고안정적'],
+      ['gradually building','점진적빌드업'],['urgent','긴박한'],
+      ['stately','장엄한'],['pulsating','박동치는'],
+      ['rubato','루바토(자유로운템포)'],['free tempo','자유템포'],
+      ['half-time feel','하프타임느낌'],
+    ]},
+    { label: '📊 BPM 수치 참고', chips: [
+      ['60 BPM','느린발라드'],['70 BPM','느린편'],['80 BPM','중저속'],
+      ['90 BPM','중간'],['100 BPM','중간~빠른'],['110 BPM','빠른편'],
+      ['120 BPM','빠름'],['140 BPM','매우빠름'],
+    ]},
+    { label: '🥁 리듬 패턴', chips: [
+      ['straight beat','스트레이트비트'],['shuffle beat','셔플비트'],
+      ['swing rhythm','스윙리듬'],['swung rhythm','스윙된리듬'],
+      ['syncopated','싱코페이션(엇박)'],['polyrhythm','폴리리듬'],
+      ['half-time feel','하프타임느낌'],['double-time feel','더블타임느낌'],
+      ['triplet feel','트리플렛'],['offbeat','오프비트'],
+      ['backbeat heavy','백비트강조'],['four-on-the-floor','하우스킥패턴'],
+    ]},
+    { label: '🎵 멜로디 방향', chips: [
+      ['catchy hook','중독성있는훅'],['earworm','머릿속에맴도는'],
+      ['lyrical melody','서정적선율'],['flowing melodic line','흐르는선율'],
+      ['sparse melody','절제된멜로디'],['ascending melody','상승하는선율'],
+      ['descending melody','하강하는선율'],['melancholic minor melody','우울한단조선율'],
+      ['bright melody','밝은선율'],['repetitive melody','반복멜로디'],
+      ['soaring melody','치솟는멜로디'],
+    ]},
+    { label: '🎸 그루브 & 코드 질감', chips: [
+      ['heavy groove','헤비그루브'],['tight groove','타이트그루브'],
+      ['pocket groove','포켓그루브'],['laidback groove','여유로운그루브'],
+      ['finger snap groove','손가락스냅리듬'],['clap rhythm','손뼉중심리듬'],
+      ['latin groove','라틴그루브'],['funky','펑키한'],['danceable','춤추기좋은'],
+      ['driving bass','드라이빙베이스'],['lush chords','풍성한코드'],
+      ['sparse chords','절제된코드'],['jazz chords','재즈코드'],
+      ['sus chords','서스코드'],['seventh chords','세븐스코드'],
+      ['chromatic harmony','반음계화성'],['modal harmony','모달화성'],
+    ]},
+    { label: '📐 박자 (Time Signature)', chips: [
+      ['4/4 time','4/4박자(일반)'],['3/4 time waltz','3/4박자(왈츠)'],
+      ['6/8 time','6/8박자'],['5/4 time','5/4박자'],['7/8 time','7/8박자'],
+      ['12/8 time','12/8박자'],['odd time signature','홀수박자'],
+    ]},
+  ],
+
+  situations: [
+    { label: '💭 감정 상태', chips: [
+      ['heartbreak','이별'],['joy','기쁨'],['nostalgia','향수'],
+      ['loneliness','외로움'],['empowerment','자기강화'],['grief','슬픔'],
+      ['euphoria','황홀감'],['anxiety','불안'],['inner peace','내면평화'],
+      ['yearning','그리움'],['bittersweet','달콤쌉쌀'],['rage','분노'],
+      ['wonder','경이'],['serenity','고요함'],['hope','희망'],
+      ['despair','절망'],['gratitude','감사'],['longing','그리운'],
+      ['wistful','아련한'],['introspective','내향적인'],['tender','섬세하고부드러운'],
+    ]},
+    { label: '🏃 활동 / 라이프스타일', chips: [
+      ['morning routine','아침루틴'],['evening walk','저녁산책'],
+      ['late night drive','심야드라이브'],['working out','운동'],
+      ['meditation','명상'],['studying','공부'],['cooking','요리'],
+      ['dancing','춤'],['commuting','출퇴근'],['reading','독서'],
+      ['yoga','요가'],['running','달리기'],['working from home','재택근무'],
+    ]},
+    { label: '🏙️ 장소 / 배경', chips: [
+      ['city streets','도시거리'],['beach','해변'],['forest','숲'],
+      ['mountain peak','산정상'],['outer space','우주'],['underwater','수중'],
+      ['countryside','시골'],['rooftop','옥상'],['coffee shop','카페'],
+      ['bar at night','심야바'],['concert hall','공연장'],['empty room','빈방'],
+      ['rainy window','빗속창문'],['highway','고속도로'],
+      ['neon city','네온도시'],['small town','소도시'],
+    ]},
+    { label: '🕰️ 시간대', chips: [
+      ['sunrise','일출'],['early morning','이른아침'],['midday','정오'],
+      ['golden hour','골든아워'],['sunset','노을'],['dusk','황혼'],
+      ['twilight','트와일라잇'],['midnight','자정'],['3am','새벽3시'],
+      ['late night','늦은밤'],['dawn','새벽'],['city at night','밤의도시'],
+    ]},
+    { label: '💑 관계 / 상황', chips: [
+      ['first love','첫사랑'],['long-term relationship','오랜연인'],
+      ['friendship','우정'],['family bonds','가족'],['self-love','자기사랑'],
+      ['unrequited love','짝사랑'],['reunion','재회'],['farewell','이별/작별'],
+      ['long distance','장거리연애'],['betrayal','배신'],['forgiveness','용서'],
+      ['growing up','성장'],['letting go','놓아보내기'],['missing you','그리움'],
+    ]},
+    { label: '🎉 사회적 이벤트', chips: [
+      ['party anthem','파티anthem'],['wedding song','웨딩송'],['graduation','졸업'],
+      ['celebration','축하'],['memorial','추모'],['protest song','저항가요'],
+      ['lullaby','자장가'],['birthday','생일'],['road trip','로드트립'],
+      ['sports anthem','스포츠anthem'],['movie soundtrack','영화OST'],
+      ['game music','게임음악'],
+    ]},
+    { label: '🌐 철학적 / 사회적 주제', chips: [
+      ['urban loneliness','도시고독'],['technology and humanity','기술과인간'],
+      ['social justice','사회정의'],['identity','정체성'],['existential','실존적'],
+      ['spiritual journey','영적여정'],['self-discovery','자아발견'],
+      ['generational trauma','세대트라우마'],['mental health','정신건강'],
+    ]},
+  ],
+
+  rules: [
+    { label: '📌 프롬프트 순서 공식 (순서대로 조합)', type: 'info', chips: [
+      ['[1] 장르','시대+질감+서브장르 구체적으로'],
+      ['[2] 에너지/템포','빠름/느림/그루브'],
+      ['[3] 악기 1~2개','구체적 악기명이 효과적'],
+      ['[4] 프로덕션 텍스처','아날로그/스튜디오/로파이 등'],
+      ['[5] 리버브/공간감','dry/room sound/no reverb 등'],
+      ['[6] 보컬 방향','남/여, 스타일, 이펙트 여부'],
+    ]},
+    { label: '✅ 권장 기본값 (클릭하여 추가)', type: 'good', chips: [
+      ['studio recording','스튜디오녹음'],['close mic','근거리마이크'],
+      ['tight mix','타이트한믹스'],['dry vocal','건조한보컬'],
+      ['no reverb','리버브없음'],['clean production','클린프로덕션'],
+      ['no autotune','오토튠없음'],['no heavy effects','과한이펙트없음'],
+      ['no intro','인트로없음(즉각시작)'],['instant hook','즉각적인훅'],
+    ]},
+    { label: '❌ 절대 사용 금지 (SUNO 품질 저하 — 참고용)', type: 'danger', chips: [
+      ['concert hall','콘서트홀(울림과다)'],['live performance','라이브공연'],
+      ['live band','라이브밴드(어울림부적절)'],['live recording','라이브녹음'],
+      ['stadium reverb','스타디움리버브'],['arena sound','아레나사운드'],
+      ['outdoor stage','야외무대'],['crowd noise','관중소리'],
+    ]},
+    { label: '⚠️ 피해야 할 표현 (효과 저하 — 참고용)', type: 'danger', chips: [
+      ['artist names','아티스트이름직접사용'],['song titles','곡제목직접사용'],
+      ['5+ genres at once','5개이상장르동시'],['contradictions','상충키워드'],
+      ['narrative descriptions','서사적묘사'],
+      ['emotional intro with buildup','긴빌드업인트로(스킵유발)'],
+      ['slow build intro','느린빌드업인트로'],
+    ]},
+    { label: '⚡ 인트로 치트키 — 스킵 방지 전략', chips: [
+      ['cold open with dry vocal','드라이보컬로콜드오픈'],
+      ['no intro','인트로없음'],['immediate engagement','즉각적몰입'],
+      ['start with impact sound','임팩트사운드로시작'],
+      ['no buildup','빌드업없음'],['instant hook','즉각적훅'],
+      ['immediate groove','즉각적그루브'],['drop immediately into groove','그루브즉각시작'],
+    ]},
+    { label: '💡 완성 프롬프트 예시 (참고용)', type: 'info', chips: [
+      ['Korean ballad rap, acoustic piano, boom bap drums, dry rap vocal, no intro','한국발라드랩완성예시'],
+      ['Dreamy late-night R&B, soft electric piano, breathy female vocal, sub bass, no reverb','심야알앤비완성예시'],
+      ['1970s Motown soul, analog Rhodes, tight tambourine groove, intimate female vocal','모타운소울완성예시'],
+      ['Rainy city pop ballad, fingerpicked guitar, warm reverb, emotive male vocal, no autotune','빗속시티팝발라드'],
+      ['indie rock band, crunch guitar, four piece band, melancholic, close mic, tight mix','인디록밴드완성예시'],
+      ['lo-fi hip hop, Rhodes piano, boom bap drums, rainy day mood, soft male vocal, vinyl warmth','로파이힙합완성예시'],
+    ]},
+  ],
+
+  instruments: [
+    { label: '🎹 건반 심화', chips: [
+      ['grand piano','그랜드피아노'],['acoustic piano','어쿠스틱피아노'],
+      ['Rhodes','로즈전자피아노'],['Fender Rhodes','펜더로즈'],
+      ['electric piano','전자피아노'],['Wurlitzer','워리처'],
+      ['organ','오르간'],['synth pad','신스패드'],
+      ['warm analog Rhodes','따뜻한빈티지전자피아노'],
+      ['soft electric piano chords','부드러운일렉피아노코드'],
+    ]},
+    { label: '🎸 기타 심화', chips: [
+      ['acoustic guitar','어쿠스틱기타'],['fingerpicked guitar','핑거피킹기타'],
+      ['nylon string guitar','나일론현기타'],['electric guitar','일렉기타'],
+      ['clean electric guitar','클린일렉기타'],['overdriven guitar','오버드라이브기타'],
+      ['crunch guitar','크런치기타'],['distorted guitar','디스토션기타'],
+      ['fuzz guitar','퍼즈기타'],['wah guitar','와와기타'],
+      ['chorus guitar','코러스이펙트기타'],['reverb soaked guitar','리버브가득한기타'],
+      ['jangly guitar','쟁글거리는인디팝기타'],['ambient guitar','공간감있는기타'],
+    ]},
+    { label: '🎚️ 베이스 심화', chips: [
+      ['bass guitar','베이스기타'],['electric bass','일렉베이스'],
+      ['upright bass','업라이트베이스'],['sub bass','서브베이스'],
+      ['rolling bass','구르는베이스'],['fretless bass','프렛리스베이스'],
+      ['slap bass','슬랩베이스'],['acid bass line','애시드베이스라인'],
+      ['808 bass','808베이스'],['punchy bass','펀치감있는베이스'],
+    ]},
+    { label: '🥁 드럼 심화', chips: [
+      ['acoustic drums','어쿠스틱드럼'],['brushed drums','브러시드럼'],
+      ['TR-808','808드럼머신'],['TR-909','909드럼머신'],
+      ['boom bap drums','붐뱁드럼'],['tight snare','타이트한스네어'],
+      ['punchy kick','펀치감있는킥'],['cajon','카혼'],['congas','콩가'],
+      ['tambourine','탬버린'],['light percussion','가벼운타악기'],
+      ['vinyl crackle','바이닐크래클'],['trap hi-hats','트랩하이햇'],
+      ['four-on-the-floor','하우스킥패턴'],['gated reverb snare','게이티드리버브스네어'],
+    ]},
+    { label: '🎻 현악 심화', chips: [
+      ['violin','바이올린'],['cello','첼로'],['string quartet','현악사중주'],
+      ['orchestral strings','오케스트라현악'],['soft strings','부드러운현악'],
+      ['pizzicato strings','피치카토현악'],['string ensemble','스트링앙상블'],
+    ]},
+    { label: '🎷 관악 심화', chips: [
+      ['trumpet','트럼펫'],['muted trumpet','뮤트트럼펫'],['flugelhorn','플뤼겔호른'],
+      ['trombone','트롬본'],['saxophone','색소폰'],
+      ['alto sax','알토색소폰'],['tenor sax','테너색소폰'],['flute','플루트'],
+      ['brass section','브라스섹션'],['horn section','혼섹션'],
+    ]},
+    { label: '🎛️ 신스 심화', chips: [
+      ['synthesizer','신디사이저'],['Moog synth','무그신스'],
+      ['arp synth','아르페지오신스'],['pad synth','패드신스'],
+      ['synth lead','신스리드'],['analog synth','아날로그신스'],
+      ['supersaw synth','EDM수퍼소우신스'],['chiptune','칩튠'],
+      ['vocoder','보코더'],['synth bass','신스베이스'],
+    ]},
+    { label: '🌟 특수 악기 & 텍스처', chips: [
+      ['harp','하프'],['marimba','마림바'],['vibraphone','비브라폰'],
+      ['sitar','시타르'],['shamisen','샤미센'],['mandolin','만돌린'],['banjo','밴조'],
+      ['ukulele','우쿨렐레'],['harmonica','하모니카'],
+      ['subtle chime textures','은은한차임텍스처'],
+      ['cinematic pads','시네마틱패드'],['warm bass swells','따뜻한베이스스웰'],
+      ['vintage organ harmonic bed','빈티지오르간하모닉베드'],
+    ]},
+  ],
+
+  production: [
+    { label: '✅ 클린 / 스튜디오 프로덕션 (권장 — 클릭하여 추가)', type: 'good', chips: [
+      ['studio recording','스튜디오녹음'],['clean studio production','클린스튜디오'],
+      ['close mic','근거리마이크'],['tight mix','타이트한믹스'],
+      ['dry and punchy','건조하고펀치감'],['pristine mix','깨끗한믹스'],
+      ['clean production','클린프로덕션'],['organic production','실제연주느낌'],
+      ['studio band recording','스튜디오밴드녹음'],
+    ]},
+    { label: '🎞️ 아날로그 / 빈티지 텍스처', chips: [
+      ['analog warmth','아날로그따뜻함'],['tape saturation','테이프새추레이션'],
+      ['warm analog tape tone','따뜻한아날로그테이프톤'],
+      ['vinyl warmth','바이닐따뜻함'],['vinyl texture','LP레코드느낌'],
+      ['tape hiss','테이프히스'],['dusty samples','먼지낀샘플'],
+      ['gritty','거친질감'],['analog board mix','아날로그믹서느낌'],
+      ['tape recorded','테이프녹음느낌'],
+    ]},
+    { label: '🎛️ 믹싱 & 공간 처리', chips: [
+      ['wide stereo','와이드스테레오'],['dense layers','촘촘한레이어'],
+      ['sparse arrangement','절제된편곡'],['minimal','미니멀'],
+      ['radio-ready','라디오용'],['sidechained bass','킥에맞춰펌핑되는베이스'],
+      ['compressed','컴프레스된'],['polished','세련된'],
+    ]},
+    { label: '🌊 리버브 / 딜레이', chips: [
+      ['no reverb','리버브없음'],['dry','건조한'],['intimate space','아늑한공간'],
+      ['room sound','룸사운드'],['warm reverb','따뜻한리버브'],
+      ['plate reverb','플레이트리버브'],['huge reverb','매우넓은리버브'],
+      ['vintage plate reverb','옛날스튜디오리버브'],
+      ['tape echo','테이프에코'],['heavy delay','강한딜레이'],
+      ['tape delay','테이프딜레이'],
+    ]},
+    { label: '📻 Lo-fi 텍스처', chips: [
+      ['lo-fi','로파이'],['lo-fi warmth','로파이따뜻함'],
+      ['bedroom recording','방녹음'],['raw recording','날것의녹음'],
+      ['lo-fi band','로파이밴드'],['vinyl crackle','바이닐크래클'],
+      ['dusty','먼지낀감성'],
+    ]},
+    { label: '🎸 밴드 프로덕션', chips: [
+      ['room mic drums','룸마이크드럼'],['close mic drums','클로즈마이크드럼'],
+      ['tight rhythm section','타이트한리듬섹션'],
+      ['dry room sound','건조한룸사운드'],['full band sound','풀밴드사운드'],
+      ['band recording','밴드녹음느낌'],['live room feel','라이브룸느낌'],
+      ['raw band energy','날것의밴드에너지'],['tight band groove','타이트한밴드그루브'],
+    ]},
+    { label: '🎭 조성 / 키 (프로덕션 컬러)', chips: [
+      ['minor key','단조'],['major key','장조'],['melancholic minor','우울한단조'],
+      ['C minor','다단조(어둡고무거운)'],['A minor','가단조(슬프고감성)'],
+      ['E minor','미단조(서정적)'],['G major','사장조(밝고따뜻한)'],
+      ['D major','라장조(화려하고생동감)'],['modal','모달'],
+      ['pentatonic','펜타토닉(동양적)'],
+    ]},
+  ],
+
+  vibes: [
+    { label: '🚗 드라이브', chips: [
+      ['night drive','심야드라이브'],['highway cruise','고속도로크루징'],
+      ['city lights drive','도심야경드라이브'],['open road','탁트인도로'],
+      ['road trip','로드트립'],['late night cruise','늦은밤크루징'],
+      ['driving at sunset','노을드라이브'],['freeway at dawn','새벽고속도로'],
+      ['rain on windshield','빗속드라이브'],['windows down','창문열고달리는'],
+      ['neon signs blur','네온사인이번지는'],
+    ]},
+    { label: '🌊 바다 / 해변', chips: [
+      ['beach party','해변파티'],['ocean waves','파도소리'],['summer beach','여름해변'],
+      ['seaside walk','해안가산책'],['surfing','서핑'],['sunset at sea','바다노을'],
+      ['bonfire on beach','해변모닥불'],['salty breeze','짭조름한바닷바람'],
+      ['blue horizon','파란수평선'],['barefoot on sand','맨발모래위'],
+      ['ocean at night','밤바다'],['harbor lights','항구의불빛'],
+    ]},
+    { label: '🌿 산책 / 자연', chips: [
+      ['evening stroll','저녁산책'],['park walk','공원산책'],['forest path','숲길'],
+      ['mountain trail','산길트레킹'],['riverside walk','강변산책'],
+      ['morning jog','아침조깅'],['autumn leaves walk','단풍속산책'],
+      ['countryside road','시골길'],['quiet neighborhood','조용한동네골목'],
+      ['gentle breeze','부드러운바람'],['birdsong morning','새소리가득한아침'],
+      ['peaceful nature','평화로운자연'],
+    ]},
+    { label: '💑 연인 / 로맨스', chips: [
+      ['couple walk','연인과산책'],['first date','첫데이트'],
+      ['rooftop romance','옥상로맨스'],['candlelit dinner','촛불저녁식사'],
+      ['slow dance','슬로우댄스'],['holding hands','손을잡고'],
+      ['whispering love','사랑을속삭이는'],['stargazing together','함께별보기'],
+      ['kissing in the rain','빗속의키스'],['lazy sunday morning','나른한일요일아침'],
+      ['pillow talk','베개위의대화'],['missing you','그리움'],
+    ]},
+    { label: '🌙 혼자만의 시간 / 감성', chips: [
+      ['alone at midnight','한밤중혼자'],['late night thoughts','늦은밤혼자생각'],
+      ['rainy window','빗소리들으며창가에'],['cafe alone','카페에서혼자'],
+      ['reading in silence','조용히책읽기'],['journaling','일기쓰기'],
+      ['nostalgic daydream','향수에잠긴몽상'],['insomnia','잠못드는밤'],
+      ['empty apartment','텅빈방'],['street light glow','가로등불빛'],
+      ['quiet reflection','조용한자기성찰'],['healing slowly','천천히치유되는'],
+    ]},
+    { label: '🍻 파티 / 축제 / 신남', chips: [
+      ['house party','하우스파티'],['rooftop party','옥상파티'],
+      ['festival crowd','페스티벌군중'],['club night','클럽밤'],
+      ['summer festival','여름축제'],['friends gathering','친구들과모임'],
+      ['celebration','축하'],['dance floor','댄스플로어'],
+      ['karaoke night','노래방'],['late night bar','심야바'],
+      ['pregame vibes','파티전분위기업'],['after party','파티이후'],
+    ]},
+    { label: '🏡 일상 / 집에서', chips: [
+      ['cozy home','아늑한집'],['morning routine','아침루틴'],
+      ['cooking dinner','저녁요리'],['working from home','재택근무'],
+      ['lazy afternoon','나른한오후'],['Sunday brunch','일요일브런치'],
+      ['watching rain inside','실내에서빗소리'],['plants and sunlight','화분과햇빛'],
+      ['coffee and music','커피와음악'],['warm blanket','따뜻한이불'],
+      ['evening wind down','저녁휴식루틴'],
+    ]},
+    { label: '🏙️ 도시 / 밤거리', chips: [
+      ['city at night','밤의도시'],['neon lights','네온불빛'],
+      ['empty subway','텅빈지하철'],['street food','포장마차골목'],
+      ['downtown hustle','다운타운활기'],['back alley','골목길'],
+      ['convenience store night','심야편의점'],['urban loneliness','도시속외로움'],
+      ['skyscraper view','빌딩숲전망'],['taxi in the rain','비오는날택시'],
+      ['foggy city street','안개낀도시거리'],
+    ]},
+  ],
+};
+
+// ─────────────────────────────────────────────────── PRESETS
+const PRESETS = [
+  {
+    theme: '💕 사랑',
+    combos: [
+      { genre: 'K발라드', ko: '한국발라드', prompt: 'Korean ballad, emotional piano, lush strings, tender female vocal, heartfelt, studio recording, close mic, no reverb', desc: '감성적인 한국 발라드 러브송 완성형' },
+      { genre: 'R&B', ko: '알앤비/네오소울', prompt: 'neo soul R&B, Rhodes piano, brushed drums, smooth female vocal, intimate, warm reverb, close mic', desc: '따뜻하고 감각적인 알앤비 러브송' },
+      { genre: 'Dream Pop', ko: '드림팝', prompt: 'romantic dream pop, synth pad, layered female vocals, breathy, warm production, sparkling synth', desc: '몽환적인 로맨틱 팝' },
+      { genre: 'Trap Soul', ko: '트랩소울', prompt: 'trap soul, melodic rap, 808 bass, emotive R&B vocal, heartfelt, intimate, warm synth pad', desc: '감성 힙합 스타일 러브송' },
+      { genre: 'Jazz Ballad', ko: '재즈발라드', prompt: 'jazz ballad, brushed drums, acoustic piano, warm female vocal, bossa nova feel, smooth, cafe jazz', desc: '우아하고 낭만적인 재즈 러브송' },
+      { genre: 'Indie Folk', ko: '인디포크', prompt: 'indie folk, fingerpicked guitar, warm male vocal, heartfelt, close mic, organic production, bittersweet', desc: '진솔하고 따뜻한 인디포크 러브송' },
+      { genre: 'City Pop', ko: '시티팝', prompt: 'city pop, 80s production, groovy bass, warm female vocal, romantic, vintage synth, retro summer', desc: '복고 감성 시티팝 로맨스' },
+      { genre: 'Soft Rock', ko: '소프트록', prompt: 'soft rock, acoustic guitar, gentle melody, tender vocal, warm, full band, emotional, heartfelt', desc: '포근한 소프트록 러브송' },
+      { genre: 'Neo-classical', ko: '네오클래식팝', prompt: 'neoclassical pop, solo piano, light strings, peaceful, cinematic, melancholic, tender', desc: '서정적인 피아노 중심 러브송' },
+      { genre: 'Future R&B', ko: '퓨처알앤비', prompt: 'future R&B, synth pad, sub bass, breathy female vocal, dreamy, emotional, dark and beautiful', desc: '현대적 감성의 퓨처 알앤비 러브송' },
+    ]
+  },
+  {
+    theme: '🚗 드라이브',
+    combos: [
+      { genre: 'Synthwave', ko: '신스웨이브', prompt: 'synthwave, driving synth bass, night drive, retrowave, pulsing, analog warmth, neon lights', desc: '한밤 드라이브를 위한 레트로 신스웨이브' },
+      { genre: 'City Pop', ko: '시티팝', prompt: 'city pop, 80s production, groovy bass, upbeat, funky, neon city, summer night drive', desc: '도심 야경 드라이브 시티팝' },
+      { genre: 'Indie Rock', ko: '인디록', prompt: 'indie rock, crunch guitar, driving drums, road trip, energetic, full band, open road', desc: '로드트립 인디록' },
+      { genre: 'Trap', ko: '트랩/힙합', prompt: 'trap, 808 bass, cinematic, night drive, relentless, pulsing, dark and beautiful', desc: '심야 드라이브 트랩' },
+      { genre: 'R&B', ko: '컨템포러리알앤비', prompt: 'contemporary R&B, smooth groove, rolling bass, laid-back, night drive, warm, late night mood', desc: '여유로운 심야 알앤비 드라이브' },
+      { genre: 'Techno', ko: '테크노', prompt: 'techno, four-on-the-floor, driving, highway cruise, pulsing, minimal, dark electronic', desc: '고속도로 질주용 테크노' },
+      { genre: 'Jazz Fusion', ko: '재즈퓨전', prompt: 'jazz fusion, groovy, Rhodes, tight rhythm section, upbeat, open road feel, smooth', desc: '낮 드라이브 재즈퓨전' },
+      { genre: 'Country Rock', ko: '컨트리록', prompt: 'country rock, acoustic guitar, open road, driving bass, upbeat, free, countryside road', desc: '시골길 드라이브 컨트리록' },
+      { genre: 'Lo-fi', ko: '로파이힙합', prompt: 'lo-fi hip hop, chill, laid-back, city lights drive, vinyl warmth, night cruise, late night', desc: '느긋한 심야 드라이브 로파이' },
+      { genre: 'Alt Rock', ko: '얼터너티브록', prompt: 'alternative rock, reverb guitar, atmospheric, highway cruise, moody, driving, melancholic', desc: '감성적인 고속도로 드라이브 얼터록' },
+    ]
+  },
+  {
+    theme: '💪 응원',
+    combos: [
+      { genre: 'Pop Rock', ko: '팝록', prompt: 'pop rock, anthemic, full band, driving drums, powerful vocal, catchy hook, uplifting, triumphant', desc: '힘차게 응원하는 팝록 anthem' },
+      { genre: 'Rock Anthem', ko: '록앤썸', prompt: 'rock anthem, full band, distorted guitar, belting vocal, triumphant, stadium energy, powerful', desc: '경기장을 울리는 록 anthem' },
+      { genre: 'Hip-hop', ko: '컨셔스랩', prompt: 'conscious rap, boom bap, upbeat, powerful rap flow, energetic, motivational, uplifting', desc: '동기부여 힙합 응원가' },
+      { genre: 'K-Pop', ko: '케이팝', prompt: 'K-pop, energetic, synth, catchy hook, full band, upbeat, dance groove, uplifting, bright', desc: '케이팝 응원 anthem' },
+      { genre: 'EDM', ko: 'EDM', prompt: 'EDM, four-on-the-floor, euphoric, big energy, supersaw synth, explosive entry, festival crowd', desc: '페스티벌 EDM 응원가' },
+      { genre: 'Gospel Soul', ko: '가스펠/소울', prompt: 'gospel choir, soul, powerful belting, uplifting, triumphant, full choir harmony, empowerment', desc: '감동적인 가스펠 응원가' },
+      { genre: 'Indie Rock', ko: '인디록밴드', prompt: 'indie rock band, anthemic, driving, uplifting, earnest vocal, jangly guitar, heartfelt, full band', desc: '진심 담긴 인디록 응원가' },
+      { genre: 'Pop Punk', ko: '팝펑크', prompt: 'pop punk, energetic, full band, catchy hook, raw energy, driving drums, anthemic, uplifting', desc: '신나는 팝펑크 응원가' },
+      { genre: 'Orchestral Pop', ko: '오케스트라팝', prompt: 'orchestral pop, cinematic, triumphant, swelling strings, epic, powerful vocal, uplifting, majestic', desc: '웅장한 오케스트라 응원가' },
+      { genre: 'Funk R&B', ko: '펑크알앤비', prompt: 'upbeat R&B, funky, groove, empowerment, soulful female vocal, brass section, uplifting, danceable', desc: '경쾌한 펑키 알앤비 응원가' },
+    ]
+  },
+  {
+    theme: '🤝 우정',
+    combos: [
+      { genre: 'Indie Pop', ko: '인디팝', prompt: 'indie pop, warm acoustic guitar, carefree, uplifting, feel-good, bright melody, jangly', desc: '따뜻하고 밝은 인디팝 우정가' },
+      { genre: 'Folk Pop', ko: '포크팝', prompt: 'folk pop, fingerpicked guitar, warm, nostalgic, bittersweet, singer-songwriter, heartfelt', desc: '그리운 추억의 포크팝 우정가' },
+      { genre: 'Pop', ko: '팝', prompt: 'feel-good pop, catchy, bright melody, cheerful, warm production, group harmony feel, carefree', desc: '밝고 경쾌한 팝 우정가' },
+      { genre: 'Indie Rock', ko: '인디록', prompt: 'indie rock, jangly guitar, carefree, warm, energetic, full band feel, nostalgic, fun', desc: '에너지 넘치는 인디록 우정가' },
+      { genre: 'Jazz Rap', ko: '재즈랩/칠홉', prompt: 'jazz rap, boom bap, laid-back, nostalgic, warm, chillhop, chill, easy-going', desc: '여유로운 재즈랩 우정가' },
+      { genre: 'Neo Soul', ko: '네오소울', prompt: 'neo soul, warm Rhodes, uplifting, layered harmony, soulful, intimate, feel-good', desc: '따뜻한 네오소울 우정가' },
+      { genre: 'Country Pop', ko: '컨트리팝', prompt: 'country pop, acoustic guitar, upbeat, carefree, warm, sunny, fun, feel-good', desc: '밝고 신나는 컨트리팝 우정가' },
+      { genre: 'Chillhop', ko: '칠홉/로파이', prompt: 'chillhop, lo-fi, warm, laid-back, easy-going, vinyl warmth, nostalgic, chill', desc: '편안한 칠홉 우정가' },
+      { genre: 'Pop Rock', ko: '팝록밴드', prompt: 'pop rock band, four-piece band, energetic, fun, bright, catchy hook, full band, uplifting', desc: '밴드 느낌의 팝록 우정가' },
+      { genre: 'Singer-Songwriter', ko: '싱어송라이터', prompt: 'singer-songwriter, acoustic guitar, intimate, heartfelt, nostalgic, conversational, warm, honest', desc: '진솔한 싱어송라이터 우정가' },
+    ]
+  },
+  {
+    theme: '💔 이별',
+    combos: [
+      { genre: 'K-Ballad', ko: '한국발라드', prompt: 'Korean ballad, emotional piano, lush strings, melancholic, powerful female vocal, heartbreak, close mic, no reverb', desc: '한국 발라드 이별 노래 정석' },
+      { genre: 'Indie Folk', ko: '인디포크', prompt: 'indie folk, fingerpicked guitar, wistful, soft male vocal, bittersweet, close mic, sad and beautiful', desc: '조용하고 아련한 인디포크 이별' },
+      { genre: 'Dark R&B', ko: '다크알앤비', prompt: 'dark R&B, contemporary R&B, emotional, sub bass, heartbreak, breathy female vocal, late night mood', desc: '어둡고 감성적인 알앤비 이별' },
+      { genre: 'Lo-fi', ko: '로파이힙합', prompt: 'lo-fi hip hop, melancholic, vinyl warmth, rainy day mood, soft vocal, heartbreak, alone at midnight', desc: '빗속에 듣는 로파이 이별가' },
+      { genre: 'Shoegaze', ko: '슈게이징/드림팝', prompt: 'shoegaze, dream pop, ethereal, reverb soaked guitar, dreamy vocal, melancholic, wistful, layered vocals', desc: '몽환적인 슈게이징 이별' },
+      { genre: 'Jazz Ballad', ko: '재즈발라드', prompt: 'jazz ballad, Rhodes, brushed drums, heartfelt female vocal, melancholic, intimate, bittersweet', desc: '서정적인 재즈 발라드 이별' },
+      { genre: 'Dark Pop', ko: '다크팝', prompt: 'dark pop, melancholic, emotional, intimate vocal, sparse arrangement, introspective, cold, midnight', desc: '차갑고 감성적인 다크팝 이별' },
+      { genre: 'Emo Rap', ko: '에모랩/트랩', prompt: 'emo rap, trap, introspective rap, raw emotion, vulnerable, heartbreak, sad and groovy, melancholic', desc: '날것의 감정을 담은 에모랩 이별' },
+      { genre: 'Soft Rock', ko: '소프트록', prompt: 'soft rock, acoustic guitar, sorrowful, warm reverb, emotional, gentle, tender, heartfelt goodbye', desc: '포근하지만 슬픈 소프트록 이별' },
+      { genre: 'Neo-classical', ko: '네오클래식', prompt: 'neoclassical, solo piano, melancholic, minimal, cinematic, sparse, cold ending, bittersweet', desc: '여운 남기는 네오클래식 이별' },
+    ]
+  },
+  {
+    theme: '🌙 새벽감성',
+    combos: [
+      { genre: 'Lo-fi', ko: '로파이힙합', prompt: 'lo-fi hip hop, late night mood, vinyl warmth, chill, rainy window, insomnia, alone at midnight', desc: '잠못드는 밤의 로파이 감성' },
+      { genre: 'Dark R&B', ko: '다크알앤비', prompt: 'dark R&B, quiet storm, midnight, breathy female vocal, warm reverb, intimate, late night thoughts', desc: '새벽 감성 다크 알앤비' },
+      { genre: 'Indie Folk', ko: '인디포크', prompt: 'indie folk, fingerpicked guitar, alone at midnight, wistful, close mic, soft, introspective', desc: '혼자 보내는 새벽의 인디포크' },
+      { genre: 'Chillwave', ko: '칠웨이브/앰비언트', prompt: 'chillwave, ambient electronic, atmospheric, dark, ethereal, late night thoughts, dreamy, hazy', desc: '몽환적인 새벽 칠웨이브' },
+      { genre: 'Jazz', ko: '카페재즈', prompt: 'smooth jazz, brushed drums, cafe jazz, late night, warm, intimate, quiet, soft piano', desc: '늦은 밤 카페의 재즈' },
+      { genre: 'K-Ballad', ko: 'K발라드(3am)', prompt: 'Korean ballad, 3am feel, emotional piano, intimate vocal, no reverb, close mic, introspective', desc: '새벽 3시 감성 한국 발라드' },
+      { genre: 'Darkwave', ko: '다크웨이브', prompt: 'darkwave, moody, neon city, late night, analog synth, cold, mysterious, melancholic', desc: '도시 새벽의 다크웨이브' },
+      { genre: 'Lo-fi Rap', ko: '로파이랩', prompt: 'lo-fi hip hop, introspective rap, alone at midnight, chill, rainy window, late night thoughts', desc: '새벽 고독을 담은 로파이 랩' },
+      { genre: 'Bedroom Pop', ko: '베드룸팝', prompt: 'bedroom pop, dreamy, soft, late night thoughts, layered vocals, intimate, lo-fi warmth, hazy', desc: '새벽 감성 베드룸팝' },
+      { genre: 'Piano Solo', ko: '피아노솔로', prompt: 'solo piano, sparse, melancholic, 3am, cinematic, healing slowly, introspective, dark', desc: '새벽 고독을 담은 피아노 솔로' },
+    ]
+  },
+  {
+    theme: '🌿 힐링',
+    combos: [
+      { genre: 'Acoustic Folk', ko: '어쿠스틱포크', prompt: 'acoustic folk, fingerpicked guitar, peaceful, healing slowly, warm, close mic, organic, gentle', desc: '자연 속 어쿠스틱 힐링' },
+      { genre: 'New Age', ko: '뉴에이지', prompt: 'new age, piano, soft strings, healing music, meditation, peaceful, nature sounds, gentle', desc: '명상을 위한 뉴에이지 힐링' },
+      { genre: 'Indie Pop', ko: '인디팝', prompt: 'indie pop, soft, warm acoustic, hopeful, gentle, organic production, bittersweet, peaceful', desc: '따뜻한 인디팝 힐링' },
+      { genre: 'Lo-fi', ko: '로파이힙합', prompt: 'lo-fi hip hop, chill, warm, cozy home, vinyl warmth, peaceful, plants and sunlight, Sunday brunch', desc: '집에서 듣는 로파이 힐링' },
+      { genre: 'Cafe Jazz', ko: '카페재즈', prompt: 'smooth jazz, brushed drums, cafe jazz, warm, relaxed, peaceful, soft piano, acoustic guitar', desc: '카페에서 듣는 재즈 힐링' },
+      { genre: 'Ambient', ko: '앰비언트', prompt: 'ambient, cinematic ambient, pad synth, ethereal, meditation, spacious, healing, serene, peaceful', desc: '공간감 있는 앰비언트 힐링' },
+      { genre: 'Neo-classical', ko: '네오클래식팝', prompt: 'neoclassical pop, piano and strings, gentle, hopeful, cinematic, peaceful, warm, tender', desc: '서정적인 네오클래식 힐링' },
+      { genre: 'Chillwave', ko: '칠웨이브', prompt: 'chillwave, dreamy, atmospheric, gentle, healing, soft synth, warm, ethereal, tranquil', desc: '몽환적인 칠웨이브 힐링' },
+      { genre: 'Bossa Nova', ko: '보사노바', prompt: 'bossa nova, acoustic guitar, warm, gentle, relaxed, cafe vibes, soft female vocal, peaceful', desc: '여유로운 보사노바 힐링' },
+      { genre: 'Post-classical', ko: '포스트클래식', prompt: 'post-classical, chamber folk, sparse piano, cello, intimate, healing, delicate, warm, cinematic', desc: '감성 포스트클래식 힐링' },
+    ]
+  },
+  {
+    theme: '🎉 파티 / 설렘',
+    combos: [
+      { genre: 'EDM', ko: 'EDM/하우스', prompt: 'EDM, house, four-on-the-floor, euphoric, supersaw synth, big energy, festival crowd, uplifting', desc: '페스티벌 EDM 파티' },
+      { genre: 'Pop', ko: '팝', prompt: 'upbeat pop, catchy hook, danceable, bright, fun, full production, feel-good, carefree', desc: '신나는 팝 파티 anthem' },
+      { genre: 'K-Pop', ko: '케이팝', prompt: 'K-pop, energetic, catchy, dance groove, synth, bright, full band, upbeat, fun, colorful', desc: '케이팝 파티 anthem' },
+      { genre: 'Trap', ko: '힙합트랩', prompt: 'trap, 808 bass, energetic, club night, pulsing, relentless, dark energy, party anthem', desc: '클럽을 달구는 트랩 파티' },
+      { genre: 'Disco Funk', ko: '디스코펑크', prompt: 'disco funk, groovy bass, brass section, funky, danceable, upbeat, house party, groove', desc: '경쾌한 디스코펑크 파티' },
+      { genre: 'Reggaeton', ko: '레게톤', prompt: 'reggaeton, latin groove, danceable, party anthem, energetic, percussive, upbeat, fun', desc: '라틴 레게톤 파티' },
+      { genre: 'Pop Rock', ko: '팝록', prompt: 'pop rock, full band, upbeat, fun, catchy hook, energetic, driving, celebration, summer', desc: '밴드 팝록 파티' },
+      { genre: 'Afrobeats', ko: '아프로비츠', prompt: 'afrobeats, percussive groove, danceable, upbeat, tropical, infectious, feel-good, summer vibes', desc: '신나는 아프로비츠 파티' },
+      { genre: 'Deep House', ko: '딥하우스', prompt: 'deep house, groovy, warm bass, four-on-the-floor, chill and danceable, sophisticated, late night', desc: '세련된 딥하우스 파티' },
+      { genre: 'Future Bass', ko: '퓨처베이스', prompt: 'future bass, energetic, emotional drop, bright synth, festival, euphoric, uplifting, massive', desc: '감동적인 퓨처베이스 파티' },
+    ]
+  },
+];
+
+const SCALE_CHIPS = [
+  ['ionian mode','이오니안(장음계)'],['dorian mode','도리안모드'],
+  ['phrygian mode','프리지안모드'],['lydian mode','리디안모드'],
+  ['mixolydian mode','믹소리디안'],['aeolian mode','에올리안(단음계)'],
+  ['locrian mode','로크리안모드'],['pentatonic scale','5음음계'],
+  ['blues scale','블루스음계'],['whole tone scale','온음음계'],
+  ['harmonic minor','화성단음계'],['melodic minor','선율단음계'],['chromatic','반음계'],
+];
+const KEY_CHIPS = [
+  ['key of C major','C장조'],['key of G major','G장조'],['key of D major','D장조'],
+  ['key of A major','A장조'],['key of E major','E장조'],['key of F major','F장조'],
+  ['key of Bb major','Bb장조'],['key of A minor','A단조'],['key of E minor','E단조'],
+  ['key of D minor','D단조'],['key of B minor','B단조'],['key of F# minor','F#단조'],
+];
+const PITCH_CHIPS = [
+  ['high pitch','높은음정'],['low pitch','낮은음정'],['mid range','중간음역'],
+  ['upper register','상단음역'],['lower register','하단음역'],['wide vocal range','넓은음역'],
+  ['soaring melody','치솟는멜로디'],['low rumbling melody','낮게울리는멜로디'],
+  ['bright tone','밝은음색'],['dark tone','어두운음색'],['warm tone','따뜻한음색'],
+  ['resonant','울림풍부한'],['full bodied voice','풍성한목소리'],['breathy','숨결섞인'],
+  ['smooth tone','부드러운음색'],
+];
+
+// ─────────────────────────────────────────────────── PRESETS UI
+function buildPresets() {
+  const filters = document.getElementById('presetFilters');
+  const grid = document.getElementById('presetGrid');
+
+  PRESETS.forEach((t, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'preset-filter' + (i === 0 ? ' active' : '');
+    btn.textContent = t.theme;
+    btn.addEventListener('click', () => {
+      filters.querySelectorAll('.preset-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      showPresetTheme(grid, i);
+    });
+    filters.appendChild(btn);
+  });
+
+  showPresetTheme(grid, 0);
+}
+
+function showPresetTheme(grid, idx) {
+  grid.innerHTML = '';
+  PRESETS[idx].combos.forEach(combo => {
+    const card = document.createElement('div');
+    card.className = 'preset-card';
+    card.innerHTML = `
+      <div class="preset-card-top">
+        <span class="preset-badge">${combo.genre} · ${combo.ko}</span>
+        <button class="preset-add-btn" title="빌더에 추가">+ 빌더</button>
+      </div>
+      <div class="preset-prompt">${combo.prompt}</div>
+      <div class="preset-desc">${combo.desc}</div>
+      <div class="preset-copy-hint">클릭하여 클립보드에 복사</div>
+    `;
+    // Copy on card click
+    card.addEventListener('click', e => {
+      if (e.target.classList.contains('preset-add-btn')) return;
+      navigator.clipboard.writeText(combo.prompt).then(() => {
+        toast('복사: ' + combo.genre + ' — ' + combo.ko);
+        card.classList.add('copied');
+        setTimeout(() => card.classList.remove('copied'), 1500);
+      });
+    });
+    // Add to builder button
+    card.querySelector('.preset-add-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      const kw = '[' + combo.genre + '] ' + combo.prompt;
+      if (sel.has(kw)) { sel.delete(kw); card.querySelector('.preset-add-btn').textContent = '+ 빌더'; }
+      else { sel.add(kw); card.querySelector('.preset-add-btn').textContent = '✓ 추가됨'; }
+      render();
+    });
+    grid.appendChild(card);
+  });
+}
+
+// ─────────────────────────────────────────────────── RENDER
+const sel = new Set();
+
+function mkChip(en, ko, type) {
+  const c = document.createElement('span');
+  let cls = 'chip';
+  if (type === 'danger') cls += ' danger';
+  else if (type === 'info') cls += ' info';
+  else if (type === 'good') cls += ' good';
+  c.className = cls;
+  c.dataset.kw = en;
+  c.innerHTML = `<span class="chip-en">${en}</span><span class="chip-ko">${ko}</span>`;
+  if (type !== 'danger' && type !== 'info') {
+    c.addEventListener('click', () => toggleChip(c, en));
+  }
+  return c;
+}
+
+function mkSection(label, chips, type) {
+  const sec = document.createElement('div');
+  sec.className = 'section';
+  sec.innerHTML = `<div class="slabel">${label}</div>`;
+  const grid = document.createElement('div');
+  grid.className = 'chips';
+  chips.forEach(([en, ko]) => grid.appendChild(mkChip(en, ko, type)));
+  sec.appendChild(grid);
+  return sec;
+}
+
+function buildPanes() {
+  for (const [key, sections] of Object.entries(DATA)) {
+    const pane = document.getElementById('pane-' + key);
+    if (!pane) continue;
+    sections.forEach(s => pane.appendChild(mkSection(s.label, s.chips, s.type)));
+  }
+  // Harmony extra chips
+  const scaleEl = document.getElementById('scale-chips');
+  SCALE_CHIPS.forEach(([en,ko]) => scaleEl.appendChild(mkChip(en, ko)));
+  const keyEl = document.getElementById('key-chips');
+  KEY_CHIPS.forEach(([en,ko]) => keyEl.appendChild(mkChip(en, ko)));
+  const pitchEl = document.getElementById('pitch-chips');
+  PITCH_CHIPS.forEach(([en,ko]) => pitchEl.appendChild(mkChip(en, ko)));
+}
+
+function toggleChip(el, kw) {
+  if (sel.has(kw)) { sel.delete(kw); el.classList.remove('on'); }
+  else { sel.add(kw); el.classList.add('on'); }
+  render();
+}
+
+// ─────────────────────────────────────────────────── HARMONY TABLES
+function setupTables() {
+  document.querySelectorAll('.ctable tbody tr').forEach(row => {
+    row.addEventListener('click', () => {
+      const kw = 'key of ' + row.dataset.key;
+      if (sel.has(kw)) { sel.delete(kw); row.classList.remove('chord-on'); }
+      else { sel.add(kw); row.classList.add('chord-on'); }
+      render();
+    });
+  });
+  document.querySelectorAll('.prog-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const kw = card.dataset.prog;
+      if (sel.has(kw)) { sel.delete(kw); card.classList.remove('on'); }
+      else { sel.add(kw); card.classList.add('on'); }
+      render();
+    });
+  });
+}
+
+// ─────────────────────────────────────────────────── TABS
+function setupTabs() {
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.pane').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById('pane-' + t.dataset.p).classList.add('active');
+    });
+  });
+}
+
+// ─────────────────────────────────────────────────── LYRICS TAGS
+document.addEventListener('click', e => {
+  const el = e.target.closest('.tag-chip, .dir-chip, .energy-chip, .inst-chip');
+  if (el) {
+    navigator.clipboard.writeText(el.textContent.trim())
+      .then(() => toast('복사: ' + el.textContent.trim().substring(0, 30)));
+  }
+});
+
+function copyLyric(card) {
+  const body = card.querySelector('.lyric-body').textContent.trim();
+  navigator.clipboard.writeText(body).then(() => toast('가사 템플릿 복사 완료!'));
+}
+
+// ─────────────────────────────────────────────────── BUILDER
+function render() {
+  const out = document.getElementById('output');
+  document.getElementById('cnt').textContent = sel.size;
+  if (sel.size === 0) {
+    out.textContent = '키워드를 클릭하여 SUNO Style 프롬프트를 조합하세요...';
+    out.classList.add('empty');
+  } else {
+    out.textContent = [...sel].join(', ');
+    out.classList.remove('empty');
+  }
+}
+
+function clearAll() {
+  sel.clear();
+  document.querySelectorAll('.chip.on').forEach(c => c.classList.remove('on'));
+  document.querySelectorAll('.prog-card.on').forEach(c => c.classList.remove('on'));
+  document.querySelectorAll('.ctable tbody tr.chord-on').forEach(r => r.classList.remove('chord-on'));
+  render();
+}
+
+function copyPrompt() {
+  if (!sel.size) { toast('선택된 키워드가 없습니다'); return; }
+  navigator.clipboard.writeText([...sel].join(', ')).then(() => toast('프롬프트 복사 완료!'));
+}
+
+// ─────────────────────────────────────────────────── THEME
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  document.getElementById('themeBtn').textContent = isLight ? '🌙' : '☀️';
+  localStorage.setItem('sunoTheme', isLight ? 'light' : 'dark');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ─────────────────────────────────────────────────── INIT
+buildPanes();
+buildPresets();
+setupTabs();
+setupTables();
+if (localStorage.getItem('sunoTheme') === 'light') {
+  document.body.classList.add('light');
+  document.getElementById('themeBtn').textContent = '🌙';
+}
+</script>
+</body>
+</html>

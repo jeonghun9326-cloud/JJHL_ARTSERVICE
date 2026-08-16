@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>음악 다운로드 — JJHL</title>
+  <script>
+    (function () {
+      var t = localStorage.getItem('jjhl-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .copyright-notice {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 36px;
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+    .copyright-notice strong {
+      color: var(--text);
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.85rem;
+    }
+
+    .music-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      padding-bottom: 80px;
+    }
+
+    .music-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 26px;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .music-card:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow);
+    }
+
+    .music-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .music-icon {
+      width: 46px;
+      height: 46px;
+      background: rgba(129, 140, 248, 0.12);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    [data-theme="light"] .music-icon {
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .music-icon svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .music-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 3px;
+      line-height: 1.35;
+    }
+
+    .music-info {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .music-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 18px;
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="container">
+      <a href="index.html" class="logo">JJHL</a>
+      <nav class="nav">
+        <a href="index.html" class="nav-link">홈</a>
+        <a href="music.html" class="nav-link active">음악</a>
+        <a href="community.html" class="nav-link">커뮤니티</a>
+      </nav>
+      <div class="auth-area" id="authArea"></div>
+      <button class="theme-toggle" id="themeToggle" aria-label="테마 변경"></button>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <div class="page-hero">
+        <h1>음악 다운로드</h1>
+        <p>JJHL이 직접 제작한 음원을 무료로 다운로드하세요</p>
+      </div>
+
+      <!-- 저작권 안내 -->
+      <div class="copyright-notice">
+        <strong>저작권 안내</strong>
+        이 페이지의 모든 음원에 대한 저작권은 <strong style="display:inline;font-size:inherit;">JJHL</strong>에 있습니다.
+        음원의 무단 복제·배포·방송·상업적 이용을 금지합니다.
+        공유 및 사용 시에는 반드시 출처(JJHL)를 명시해 주세요.
+      </div>
+
+      <div class="music-grid">
+
+        <!--
+          =====================================================
+          새 음악 추가 시 아래 카드를 복사하세요.
+          mp3/ 폴더에 파일을 넣고 href와 download 속성을 수정하면 됩니다.
+          =====================================================
+        -->
+
+        <div class="music-card">
+          <div class="music-header">
+            <div class="music-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18V5l12-2v13"/>
+                <circle cx="6" cy="18" r="3"/>
+                <circle cx="18" cy="16" r="3"/>
+              </svg>
+            </div>
+            <div>
+              <div class="music-title">내가 너의 이유가 될게</div>
+              <div class="music-info">JJHL · MP3</div>
+            </div>
+          </div>
+          <div class="music-tags">
+            <span class="tag">JJHL</span>
+            <span class="tag">힙합</span>
+          </div>
+          <a class="download-btn" href="mp3/내가 너의 이유가 될게.mp3" download="내가 너의 이유가 될게.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            다운로드
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 JJHL. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

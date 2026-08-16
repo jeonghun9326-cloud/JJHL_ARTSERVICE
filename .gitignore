@@ -1,0 +1,12 @@
+node_modules/
+public/
+dist/
+dist-ssr/
+.wrangler/
+.dev.vars
+*.tsbuildinfo
+.DS_Store
+song-app/node_modules/
+song-app/dist/
+song-app/alignment-server/.venv/
+song-app/alignment-server/__pycache__/

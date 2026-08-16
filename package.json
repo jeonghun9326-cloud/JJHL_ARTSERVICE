@@ -1,0 +1,14 @@
+{
+  "name": "jjhl-studio",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "wrangler pages dev ./public",
+    "seed:admin": "node scripts/seed-admin.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
