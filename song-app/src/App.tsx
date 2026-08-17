@@ -7,6 +7,7 @@ import KaraokePreview from './components/KaraokePreview/KaraokePreview'
 import ProjectControls from './components/ProjectControls/ProjectControls'
 import AlignmentControls from './components/AlignmentControls/AlignmentControls'
 import StylePanel from './components/StylePanel/StylePanel'
+import VideoExport from './components/VideoExport/VideoExport'
 
 function App() {
   const view = useProjectStore((s) => s.view)
@@ -51,6 +52,7 @@ function App() {
         <div style={{ display: view === 'preview' ? 'flex' : 'none' }} className="flex-col gap-4">
           <StylePanel />
           <KaraokePreview />
+          <VideoExport />
         </div>
 
         {/* WaveSurfer 인스턴스는 탭 전환과 무관하게 항상 유지되어야 재생/타이밍 편집이 끊기지 않는다 */}
