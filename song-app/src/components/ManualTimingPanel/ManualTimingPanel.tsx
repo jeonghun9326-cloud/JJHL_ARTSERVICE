@@ -14,6 +14,11 @@ export default function ManualTimingPanel() {
 
   const [reactionOffsetMs, setReactionOffsetMs] = useState(DEFAULT_REACTION_OFFSET_MS)
 
+  const handleTap = () => {
+    const correctedTime = Math.max(0, useProjectStore.getState().currentTime - reactionOffsetMs / 1000)
+    tapManualTiming(correctedTime)
+  }
+
   const syllables = useMemo(() => flattenSyllables(lines), [lines])
   const total = syllables.length
   const currentSyllable = manualPointer < total ? syllables[manualPointer] : null
@@ -33,8 +38,7 @@ export default function ManualTimingPanel() {
 
       if (e.code === 'Space') {
         e.preventDefault()
-        const correctedTime = Math.max(0, useProjectStore.getState().currentTime - reactionOffsetMs / 1000)
-        tapManualTiming(correctedTime)
+        handleTap()
       } else if (e.code === 'Backspace') {
         e.preventDefault()
         undoManualTiming()
@@ -42,7 +46,7 @@ export default function ManualTimingPanel() {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [tapManualTiming, undoManualTiming, reactionOffsetMs])
+  }, [handleTap, undoManualTiming])
 
   const isDone = manualPointer >= total && manualClosed && total > 0
 
@@ -71,8 +75,9 @@ export default function ManualTimingPanel() {
       </div>
 
       <p className="text-xs text-gray-500">
-        노래를 재생한 상태에서 <kbd className="rounded bg-base-800 px-1">Space</kbd> 키를 누를 때마다 다음 음절의
-        타이밍이 현재 재생 시간으로 기록됩니다. 진행: {Math.min(manualPointer, total)} / {total}
+        노래를 재생한 상태에서 <kbd className="rounded bg-base-800 px-1">Space</kbd> 키를 누르거나 아래 가사
+        박스를 클릭할 때마다 다음 음절의 타이밍이 현재 재생 시간으로 기록됩니다. 진행:{' '}
+        {Math.min(manualPointer, total)} / {total}
       </p>
 
       <label className="flex items-center gap-2 text-xs text-gray-400">
@@ -97,7 +102,16 @@ export default function ManualTimingPanel() {
         <p className="text-sm text-gray-500">먼저 가사를 입력해주세요.</p>
       ) : (
         <>
-          <div className="rounded bg-base-950 p-4 text-2xl leading-relaxed">
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={handleTap}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleTap()
+            }}
+            className="cursor-pointer select-none rounded bg-base-950 p-4 text-2xl leading-relaxed transition-colors active:bg-base-900"
+            title="클릭할 때마다 스페이스와 동일하게 타이밍이 기록됩니다"
+          >
             {currentLine?.syllables.map((syl) => {
               const idx = syllables.findIndex((s) => s.id === syl.id)
               const stateClass =
